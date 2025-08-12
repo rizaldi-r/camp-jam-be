@@ -22,7 +22,7 @@ import { FindAllUsersQueryDto } from 'src/user/dto/req/find-all-users-query.dto'
 import {
   CheckEmailAvailabilityDto,
   CheckUsernameAvailabilityDto,
-} from 'src/user/dto/req/check-availability.dto';
+} from 'src/user/dto/req/check-user-availability.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
