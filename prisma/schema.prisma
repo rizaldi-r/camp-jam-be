@@ -1,0 +1,351 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------
+// Enums
+// ---------------------
+
+enum ModuleType {
+  LECTURE
+  ASSIGNMENT
+}
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum MembershipStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NONMEMBER
+}
+
+enum Program {
+  WEBDEV
+  DATA_ANALYST
+  MARKETING
+}
+
+enum CourseStatus {
+  ENROLLED
+  ONGOING
+  FINISHED
+}
+
+enum DescriptionType {
+  DESCRIPTION
+  LIST
+}
+
+// ---------------------
+// Core Models
+// ---------------------
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique @db.VarChar(50)
+  firstName    String   @map("first_name") @db.VarChar(50)
+  lastName     String   @map("last_name") @db.VarChar(50)
+  email        String   @unique @db.VarChar(100)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  avatarSrc    String?  @map("avatar_src") @db.VarChar(255)
+  role         UserRole @default(STUDENT)
+  refreshToken String?  @map("refresh_token")
+  lastLogin    DateTime @default(now()) @map("last_login")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // A User can be a Student or an Instructor, but not both at the same time
+  student    Student?
+  instructor Instructor?
+
+  @@map("user")
+}
+
+model Student {
+  id               String           @id @default(uuid())
+  userId           String           @unique @map("user_id") @db.VarChar(255)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program          Program
+  batchYear        Int              @map("batch_year")
+  membershipStatus MembershipStatus @default(NONMEMBER) @map("membership_status")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  enrollments Enrollment[]
+  submissions Submission[]
+
+  @@map("student")
+}
+
+model Instructor {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id") @db.VarChar(255)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program   Program
+  userTitle String?  @map("user_title") @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  courses     Course[]
+  enrollments Enrollment[]
+
+  @@map("instructor")
+}
+
+model Course {
+  id                String    @id @default(uuid())
+  title             String    @db.VarChar(255)
+  imageSrc          String?   @map("image_src") @db.VarChar(255)
+  imageAlt          String?   @map("image_alt") @db.VarChar(255)
+  description       String?   @db.Text
+  startDate         DateTime? @map("start_date")
+  endDate           DateTime? @map("end_date")
+  isMemberOnly      Boolean   @default(true) @map("is_member_only")
+  isLocked          Boolean   @default(false) @map("is_locked")
+  instructorId      String    @map("instructor_id") @db.VarChar(255)
+  allowedPrograms   Program[] @map("allowed_programs")
+  allowedBatchYears Int[]     @map("allowed_batch_years")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  instructor  Instructor          @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  sections    Section[]
+  enrollments Enrollment[]
+  categories  CoursesCategories[]
+
+  @@map("course")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String    @unique @db.VarChar(100)
+  programs  Program[] @map("programs")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  courses CoursesCategories[]
+
+  @@map("category")
+}
+
+// This is a join table for the many-to-many relationship between Course and Category.
+model CoursesCategories {
+  courseId   String   @map("course_id") @db.VarChar(255)
+  categoryId String   @map("category_id") @db.VarChar(255)
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@id([courseId, categoryId])
+  @@map("courses_categories")
+}
+
+// ---------------------
+// Course Structure
+// ---------------------
+
+model Section {
+  id        String   @id @default(uuid())
+  title     String   @db.VarChar(255)
+  courseId  String   @map("course_id") @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  modules Module[]
+
+  @@map("section")
+}
+
+model Module {
+  id             String     @id @default(uuid())
+  // label          String?    @db.VarChar(255)
+  moduleType     ModuleType @map("module_type")
+  embedVideoLink String?    @map("embed_video_link") @db.VarChar(255)
+  title          String     @db.VarChar(255)
+  description    String?    @db.Text
+  sectionId      String     @map("section_id") @db.VarChar(255)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  section            Section             @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  subdescriptions    Subdescription[]
+  links              Link[]
+  submissions        Submission[]
+  submissionTemplate SubmissionTemplate?
+  moduleProgresses   ModuleProgress[]
+
+  @@map("module")
+}
+
+model Subdescription {
+  id          String          @id @default(uuid())
+  header      String          @db.VarChar(255)
+  type        DescriptionType @default(DESCRIPTION)
+  description String?         @db.Text
+  moduleId    String          @map("module_id") @db.VarChar(255)
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@map("subdescription")
+}
+
+model Link {
+  id        String   @id @default(uuid())
+  label     String   @db.VarChar(255)
+  href      String   @db.VarChar(255)
+  moduleId  String   @map("module_id") @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@map("link")
+}
+
+// ---------------------
+// User Progress & Submissions
+// ---------------------
+
+model Enrollment {
+  id           String       @id @default(uuid())
+  studentId    String       @map("student_id") @db.VarChar(255)
+  instructorId String       @map("instructor_id") @db.VarChar(255)
+  courseId     String       @map("course_id") @db.VarChar(255)
+  // dueDate      DateTime? @map("due_date")
+  status       CourseStatus @default(ENROLLED)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  // Relationships
+  student          Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  instructor       Instructor       @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  course           Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  submissions      Submission[]
+  moduleProgresses ModuleProgress[]
+
+  moduleProgress     EnrollmentData?  @relation("moduleProgress")
+  moduleProgressData EnrollmentData[] @relation("moduleProgressData")
+  assignmentScore    EnrollmentData?  @relation("assignmentScore")
+
+  // Composite unique constraint to prevent a student from enrolling in the same course twice.
+  @@unique([studentId, courseId])
+  @@map("enrollment")
+}
+
+model ModuleProgress {
+  id           String   @id @default(uuid())
+  isCompleted  Boolean  @default(false) @map("is_completed")
+  enrollmentId String   @map("enrollment_id") @db.VarChar(255)
+  moduleId     String   @map("module_id") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  module     Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, moduleId])
+  @@map("module_progress")
+}
+
+model EnrollmentData {
+  id                 String   @id @default(uuid())
+  // progressLabel      String?  @map("progress_label") @db.VarChar(255)
+  progressPercentage Decimal? @map("progress_percentage") @db.Decimal(5, 2)
+  // countLabel         String?  @map("count_label") @db.VarChar(255)
+  moduleCompleted    Decimal? @map("module_completed") @db.Decimal(5, 2)
+  moduleTotal        Int?     @map("module_total")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  moduleProgressId     String? @unique @map("module_progress_id") @db.VarChar(255)
+  moduleProgressDataId String? @unique @map("module_progress_data_id") @db.VarChar(255)
+  assignmentScoreId    String? @unique @map("assignment_score_id") @db.VarChar(255)
+
+  moduleProgressEnrollment     Enrollment? @relation("moduleProgress", fields: [moduleProgressId], references: [id], onDelete: Cascade)
+  moduleProgressDataEnrollment Enrollment? @relation("moduleProgressData", fields: [moduleProgressDataId], references: [id], onDelete: Cascade)
+  assignmentScoresEnrollment   Enrollment? @relation("assignmentScore", fields: [assignmentScoreId], references: [id], onDelete: Cascade)
+
+  @@map("enrollment_data")
+}
+
+model Submission {
+  id              String   @id @default(uuid())
+  studentId       String   @map("student_id") @db.VarChar(255)
+  enrollmentId    String   @map("enrollment_id") @db.VarChar(255)
+  moduleId        String   @map("module_id") @db.VarChar(255)
+  isGraded        Boolean  @default(false) @map("is_graded")
+  submissionTitle String?  @map("submission_title") @db.VarChar(255)
+  scorePercentage Decimal? @map("score_percentage") @db.Decimal(5, 2)
+  scoreAchieved   Decimal? @map("score_achieved") @db.Decimal(5, 2)
+  scoreTotal      Int?     @map("score_total")
+  feedback        String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  student           Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  enrollment        Enrollment         @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  module            Module             @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  submittedContents SubmittedContent[]
+
+  // Composite unique constraint to prevent a student from submitting the same assignment multiple times.
+  @@unique([studentId, moduleId])
+  @@map("submission")
+}
+
+model SubmittedContent {
+  id           String   @id @default(uuid())
+  label        String?  @db.VarChar(255)
+  submitted    String?  @db.Text
+  submissionId String   @map("submission_id") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map("submitted_content")
+}
+
+// ---------------------
+// Assignment Template for Modules
+// ---------------------
+
+model SubmissionTemplate {
+  id              String   @id @default(uuid())
+  submissionTitle String?  @map("submission_title") @db.VarChar(255)
+  moduleId        String   @unique @map("module_id") @db.VarChar(255)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  module          Module            @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  SubmissionField SubmissionField[]
+
+  @@map("submission_template")
+}
+
+model SubmissionField {
+  id          String   @id @default(uuid())
+  label       String   @db.VarChar(255)
+  isTextfield Boolean  @map("is_textfield")
+  templateId  String   @map("template_id") @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  template SubmissionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("submission_field")
+}
