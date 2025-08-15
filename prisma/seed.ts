@@ -5,7 +5,6 @@ import {
   MembershipStatus,
   ModuleType,
   CourseStatus,
-  Prisma,
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -92,9 +91,9 @@ const categories = [
 ];
 
 async function clearData() {
-  // 1. Clean up existing data (optional, but good for testing)
+  // 1. Clean up existing data
   await prisma.moduleProgress.deleteMany();
-  await prisma.submittedContent.deleteMany();
+  await prisma.submissionFieldValue.deleteMany();
   await prisma.submission.deleteMany();
   await prisma.enrollment.deleteMany();
   await prisma.submissionField.deleteMany();
@@ -336,21 +335,30 @@ async function insertData() {
   });
   console.log(`Created modules for all sections.`);
 
-  // 7. Create a submission template for an assignment module
+  // 7. Create a submission template and fields for an assignment module
   const submissionTemplate = await prisma.submissionTemplate.create({
     data: {
-      submissionTitle: 'Project Assignment Submission',
       moduleId: module1_3.id,
-      SubmissionField: {
-        create: [
-          { label: 'Project URL', isTextfield: true },
-          { label: 'Summary of Work', isTextfield: true },
-        ],
-      },
+      submissionTitle: 'Project Assignment Submission',
+    },
+  });
+
+  const submissionField1 = await prisma.submissionField.create({
+    data: {
+      isTextfield: false,
+      label: 'Project URL',
+      submissionTemplateId: submissionTemplate.id,
+    },
+  });
+  const submissionField2 = await prisma.submissionField.create({
+    data: {
+      isTextfield: true,
+      label: 'Summary of Work',
+      submissionTemplateId: submissionTemplate.id,
     },
   });
   console.log(
-    `Created submission template for assignment: ${module1_3.title}.`,
+    `Created submission template and fields for assignment: ${module1_3.title}.`,
   );
 
   // 8. Create enrollments for students
@@ -405,36 +413,53 @@ async function insertData() {
   const submission1 = await prisma.submission.create({
     data: {
       studentId: seededStudents[0].id,
+      submissionTemplateId: submissionTemplate.id,
       enrollmentId: enrollment1.id,
-      moduleId: module1_3.id,
-      isGraded: false,
-      submissionTitle: 'My NestJS Project',
-      submittedContents: {
-        create: [
-          {
-            label: 'Project URL',
-            submitted: 'https://github.com/alice/project',
-          },
-          {
-            label: 'Summary of Work',
-            submitted: 'This is my first NestJS project.',
-          },
-        ],
-      },
+      moduleId: module1_1.id,
     },
+  });
+
+  const submission2 = await prisma.submission.create({
+    data: {
+      studentId: seededStudents[1].id,
+      enrollmentId: enrollment2.id,
+      moduleId: module1_1.id,
+      submissionTemplateId: submissionTemplate.id,
+      isGraded: true,
+      isPassed: true,
+      scorePercentage: 95.5,
+      scoreAchieved: 95.5,
+      scoreTotal: 100,
+      feedback:
+        'Excellent work, Alice! The project is well-designed and functional.',
+    },
+  });
+
+  await prisma.submissionFieldValue.createMany({
+    data: [
+      {
+        submitted: 'https://github.com/alice/project',
+        submissionId: submission1.id,
+        submissionFieldId: submissionField1.id,
+      },
+      {
+        submitted: 'This is my first NestJS project.',
+        submissionId: submission1.id,
+        submissionFieldId: submissionField2.id,
+      },
+      {
+        submissionId: submission2.id,
+        submissionFieldId: submissionField1.id,
+        submitted: 'https://github.com/alice/my-project',
+      },
+      {
+        submissionId: submission2.id,
+        submissionFieldId: submissionField2.id,
+        submitted: 'A simple portfolio website built with HTML, CSS, and JS.',
+      },
+    ],
   });
   console.log(`Created submission for student: ${seededStudents[0].userId}.`);
-
-  // 10. Create EnrollmentData
-  const enrollmentData = await prisma.enrollmentData.create({
-    data: {
-      progressPercentage: new Prisma.Decimal('50.00'),
-      moduleCompleted: new Prisma.Decimal('1'),
-      moduleTotal: 2,
-      moduleProgressId: enrollment1.id,
-    },
-  });
-  console.log(`Created enrollment data for enrollment: ${enrollment1.id}.`);
 
   console.log('Seeding finished successfully.');
 }

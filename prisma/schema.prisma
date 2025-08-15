@@ -284,40 +284,46 @@ model EnrollmentData {
 }
 
 model Submission {
-  id              String   @id @default(uuid())
-  studentId       String   @map("student_id") @db.VarChar(255)
-  enrollmentId    String   @map("enrollment_id") @db.VarChar(255)
-  moduleId        String   @map("module_id") @db.VarChar(255)
+  id                   String @id @default(uuid())
+  studentId            String @map("student_id") @db.VarChar(255)
+  enrollmentId         String @map("enrollment_id") @db.VarChar(255)
+  moduleId             String @map("module_id") @db.VarChar(255)
+  submissionTemplateId String @map("submission_template_id") @db.VarChar(255)
+
   isGraded        Boolean  @default(false) @map("is_graded")
-  submissionTitle String?  @map("submission_title") @db.VarChar(255)
+  isPassed        Boolean  @default(false) @map("is_passed")
   scorePercentage Decimal? @map("score_percentage") @db.Decimal(5, 2)
   scoreAchieved   Decimal? @map("score_achieved") @db.Decimal(5, 2)
   scoreTotal      Int?     @map("score_total")
   feedback        String?  @db.Text
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
 
-  student           Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  enrollment        Enrollment         @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  module            Module             @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  submittedContents SubmittedContent[]
+  student            Student                @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  enrollment         Enrollment             @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  module             Module                 @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  SubmissionTemplate SubmissionTemplate     @relation(fields: [submissionTemplateId], references: [id], onDelete: Cascade)
+  submittedContents  SubmissionFieldValue[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Composite unique constraint to prevent a student from submitting the same assignment multiple times.
   @@unique([studentId, moduleId])
   @@map("submission")
 }
 
-model SubmittedContent {
-  id           String   @id @default(uuid())
-  label        String?  @db.VarChar(255)
-  submitted    String?  @db.Text
-  submissionId String   @map("submission_id") @db.VarChar(255)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+model SubmissionFieldValue {
+  id                String @id @default(uuid())
+  submitted         String
+  submissionId      String @map("submission_id")
+  submissionFieldId String @map("submission_field_id")
 
-  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submission      Submission      @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submissionField SubmissionField @relation(fields: [submissionFieldId], references: [id], onDelete: Cascade)
 
-  @@map("submitted_content")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("submission_field_value")
 }
 
 // ---------------------
@@ -325,27 +331,31 @@ model SubmittedContent {
 // ---------------------
 
 model SubmissionTemplate {
-  id              String   @id @default(uuid())
-  submissionTitle String?  @map("submission_title") @db.VarChar(255)
-  moduleId        String   @unique @map("module_id") @db.VarChar(255)
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id              String @id @default(uuid())
+  submissionTitle String @map("submission_title") @db.VarChar(255)
+  moduleId        String @unique @map("module_id") @db.VarChar(255)
 
-  module          Module            @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  SubmissionField SubmissionField[]
+  module           Module            @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  submissionFields SubmissionField[]
+  submissions      Submission[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("submission_template")
 }
 
 model SubmissionField {
-  id          String   @id @default(uuid())
-  label       String   @db.VarChar(255)
-  isTextfield Boolean  @map("is_textfield")
-  templateId  String   @map("template_id") @db.VarChar(255)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id                   String   @id @default(uuid())
+  label                String
+  isTextfield          Boolean? @default(false) @map("is_textfield")
+  submissionTemplateId String   @map("template_id") @db.VarChar(255)
 
-  template SubmissionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  submissionTemplate SubmissionTemplate     @relation(fields: [submissionTemplateId], references: [id], onDelete: Cascade)
+  submittedContent   SubmissionFieldValue[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("submission_field")
 }
