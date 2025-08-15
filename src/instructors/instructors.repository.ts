@@ -6,6 +6,12 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class InstructorRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findInstructorById(id: string): Promise<Instructor | null> {
+    return this.prisma.instructor.findUnique({
+      where: { id },
+    });
+  }
+
   async findInstructorByUserId(userId: string): Promise<Instructor | null> {
     return this.prisma.instructor.findUnique({
       where: { userId },

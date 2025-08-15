@@ -8,6 +8,14 @@ import { InstructorRepository } from 'src/instructors/instructors.repository';
 export class InstructorsService {
   constructor(private readonly instructorRepository: InstructorRepository) {}
 
+  async findInstructorById(id: string): Promise<Instructor> {
+    const instructor = await this.instructorRepository.findInstructorById(id);
+    if (!instructor) {
+      throw new ResourceNotFoundException('Instructor', 'id', id);
+    }
+    return instructor;
+  }
+
   async findInstructorByUserId(userId: string): Promise<Instructor> {
     const instructor =
       await this.instructorRepository.findInstructorByUserId(userId);
