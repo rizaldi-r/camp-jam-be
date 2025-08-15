@@ -11,24 +11,33 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/role.guard';
 import { Roles } from '../_common/decorators/roles.decorator';
 import { CreateCourseDto } from 'src/courses/dto/create-course.dto';
-import { FindAllCoursesQueryDto } from 'src/courses/dto/find-all-course-query.dto';
+import {
+  FindAllCoursesQueryDto,
+  FindOneCourseDto,
+} from 'src/courses/dto/find-course-query.dto';
 import { UpdateCourseDto } from 'src/courses/dto/update-course.dto';
 import { CurrentUser } from 'src/_common/decorators/current-user.decorator';
 import { UserType } from 'src/_common/types/user.type';
-import { ResourceOwnershipGuard } from 'src/_common/guards/resource-owner.guard';
-import { OwnershipService } from 'src/_common/decorators/resource-owner/owner-service.decorator';
+import { BodyTransformerInterceptor } from 'src/_common/interceptors/body-transformer.interceptor';
 import { CoursesService } from 'src/courses/courses.service';
-import { AllowAdminBypassOwnership } from 'src/_common/decorators/resource-owner/allow-admin-bypass-owner.decorator';
+import {
+  AllowAdminBypassOwnership,
+  OwnershipIdSource,
+  OwnershipService,
+} from 'src/_common/decorators/ownership.decorator';
+import { ResourceOwnershipGuard } from 'src/_common/guards/resource-ownership.guard';
 
 @Controller('courses')
+@UseInterceptors(BodyTransformerInterceptor)
 @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnershipGuard)
-@AllowAdminBypassOwnership()
 @OwnershipService(CoursesService)
+@AllowAdminBypassOwnership()
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
@@ -50,13 +59,16 @@ export class CoursesController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.coursesService.findById(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() query: FindOneCourseDto,
+  ) {
+    return this.coursesService.findById(id, query);
   }
 
-  // TODO: ownership
-  @Patch(':id')
   @Roles('ADMIN', 'INSTRUCTOR')
+  @OwnershipIdSource('instructor', 'params', 'id')
+  @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -65,8 +77,9 @@ export class CoursesController {
     return this.coursesService.update(id, updateDto);
   }
 
+  @Roles('ADMIN', 'INSTRUCTOR')
+  @OwnershipIdSource('instructor', 'params', 'id')
   @Delete(':id')
-  @Roles('ADMIN')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.coursesService.remove(id);

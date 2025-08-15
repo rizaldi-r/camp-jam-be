@@ -34,5 +34,13 @@ export interface IFindAllCoursesQuery {
   title?: string;
   program?: Program;
   categoryId?: string;
+  categoryName?: string;
   instructorId?: string;
+  instructorUsername?: string;
+}
+
+export interface IFindOneCourseQuery {
+  showInstructor?: boolean;
+  showSections?: boolean;
+  showCategories?: boolean;
 }

@@ -4,6 +4,7 @@ import { Course, Prisma } from '@prisma/client';
 import {
   ICreateCourse,
   IFindAllCoursesQuery,
+  IFindOneCourseQuery,
   IUpdateCourse,
 } from 'src/courses/types/courses.repostory.interface';
 
@@ -16,7 +17,6 @@ export class CoursesRepository {
     categoryIds: string[],
     instructorId: string,
   ): Promise<Course> {
-    // Create the Course and the CourseCategory relationship in a single transaction
     return this.prisma.course.create({
       data: {
         ...data,
@@ -31,7 +31,14 @@ export class CoursesRepository {
   }
 
   async findAll(query: IFindAllCoursesQuery): Promise<Course[]> {
-    const { title, program, categoryId, instructorId } = query;
+    const {
+      title,
+      program,
+      categoryId,
+      categoryName,
+      instructorId,
+      instructorUsername,
+    } = query;
     const where: Prisma.CourseWhereInput = {};
 
     if (title) {
@@ -48,20 +55,87 @@ export class CoursesRepository {
           categoryId,
         },
       };
+    } else if (categoryName) {
+      where.categories = {
+        some: {
+          category: {
+            name: {
+              contains: categoryName,
+              mode: 'insensitive',
+            },
+          },
+        },
+      };
     }
 
     if (instructorId) {
       where.instructorId = instructorId;
+    } else if (instructorUsername) {
+      where.instructor = {
+        user: {
+          username: {
+            contains: instructorUsername,
+            mode: 'insensitive',
+          },
+        },
+      };
     }
 
-    // show everything
-    return this.prisma.course.findMany({ where });
+    return this.prisma.course.findMany({
+      where,
+      include: {
+        instructor: {
+          include: {
+            user: true,
+          },
+        },
+        categories: {
+          include: {
+            category: true,
+          },
+        },
+      },
+    });
   }
 
-  async findById(id: string): Promise<Course | null> {
+  async findById(
+    id: string,
+    query?: IFindOneCourseQuery,
+  ): Promise<Course | null> {
+    const include: Prisma.CourseInclude = {};
+
+    if (query?.showInstructor) {
+      include.instructor = { include: { user: true } };
+    }
+
+    if (query?.showSections) {
+      include.sections = {
+        include: {
+          modules: true,
+        },
+      };
+    }
+
+    if (query?.showCategories) {
+      include.categories = {
+        include: {
+          category: true,
+        },
+      };
+    }
+
     return this.prisma.course.findUnique({
       where: { id },
+      include: Object.keys(include).length > 0 ? include : undefined,
     });
+  }
+
+  async findInstructorIdByCourseId(courseId: string): Promise<string | null> {
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      select: { instructorId: true },
+    });
+    return course?.instructorId || null;
   }
 
   async update(
