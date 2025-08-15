@@ -26,6 +26,20 @@ export class CategoriesService {
     return category;
   }
 
+  async findByIdList(ids: string[]) {
+    const categories = await this.categoriesRepository.findByIdList(ids);
+    if (categories.length !== ids.length) {
+      const foundIds = new Set(categories.map((c) => c.id));
+      const notFoundIds = ids.filter((id) => !foundIds.has(id));
+      throw new ResourceNotFoundException(
+        'Category',
+        'id',
+        notFoundIds.join(', '),
+      );
+    }
+    return categories;
+  }
+
   async update(id: string, updateDto: UpdateCategoryDto) {
     const category = await this.categoriesRepository.findById(id);
     if (!category) {

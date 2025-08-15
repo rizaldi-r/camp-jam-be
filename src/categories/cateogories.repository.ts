@@ -43,6 +43,12 @@ export class CategoriesRepository {
     });
   }
 
+  async findByIdList(ids: string[]): Promise<Category[]> {
+    return this.prisma.category.findMany({
+      where: { id: { in: ids } },
+    });
+  }
+
   async update(id: string, data: UpdateCategoryItf): Promise<Category> {
     return this.prisma.category.update({
       where: { id },
