@@ -9,6 +9,10 @@ import { StudentsModule } from './students/students.module';
 import { InstructorsModule } from './instructors/instructors.module';
 import { CoursesModule } from './courses/courses.module';
 import { CategoriesModule } from './categories/categories.module';
+import { SectionsModule } from './sections/sections.module';
+import { ModulesModule } from './modules/modules.module';
+import { SubmissionTemplatesModule } from './submission-templates/submission-templates.module';
+import { SubmissionsModule } from './submissions/submissions.module';
 
 @Module({
   imports: [
@@ -25,6 +29,10 @@ import { CategoriesModule } from './categories/categories.module';
     InstructorsModule,
     CoursesModule,
     CategoriesModule,
+    SectionsModule,
+    ModulesModule,
+    SubmissionTemplatesModule,
+    SubmissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
