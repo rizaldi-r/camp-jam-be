@@ -7,7 +7,8 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { mapEntityToDto } from '../utils/mapper.util';
-import { UserResponseBodyDto } from '../../user/dto/res/user-response-body.dto';
+import { UserResponseDto } from '../../user/dto/res/user-response-body.dto';
+import { CourseResponseDto } from 'src/courses/dto/res/courses-response.dto';
 
 @Injectable()
 export class BodyTransformerInterceptor implements NestInterceptor {
@@ -16,7 +17,9 @@ export class BodyTransformerInterceptor implements NestInterceptor {
 
     let dtoClass: any;
     if (request.url.includes('/user')) {
-      dtoClass = UserResponseBodyDto;
+      dtoClass = UserResponseDto;
+    } else if (request.url.includes('/courses')) {
+      dtoClass = CourseResponseDto;
     }
 
     return next.handle().pipe(
