@@ -1,6 +1,7 @@
 import { MembershipStatus, UserRole } from '@prisma/client';
 import { Exclude, Expose, Type } from 'class-transformer';
 
+// TODO: put this on student and instructor dto
 export class StudentDTO {
   @Expose()
   id: string;
@@ -45,7 +46,7 @@ export class InstructorDTO {
   updatedAt: Date;
 }
 
-export class UserResponseBodyDto {
+export class UserResponseDto {
   @Expose()
   id: string;
 
