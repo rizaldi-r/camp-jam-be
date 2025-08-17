@@ -222,14 +222,15 @@ model Link {
 // ---------------------
 
 model Enrollment {
-  id           String       @id @default(uuid())
-  studentId    String       @map("student_id") @db.VarChar(255)
-  instructorId String       @map("instructor_id") @db.VarChar(255)
-  courseId     String       @map("course_id") @db.VarChar(255)
-  // dueDate      DateTime? @map("due_date")
-  status       CourseStatus @default(ENROLLED)
-  createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @updatedAt @map("updated_at")
+  id           String @id @default(uuid())
+  studentId    String @map("student_id") @db.VarChar(255)
+  instructorId String @map("instructor_id") @db.VarChar(255)
+  courseId     String @map("course_id") @db.VarChar(255)
+
+  status CourseStatus @default(ENROLLED)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relationships
   student          Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -238,13 +239,36 @@ model Enrollment {
   submissions      Submission[]
   moduleProgresses ModuleProgress[]
 
-  moduleProgress     EnrollmentData?  @relation("moduleProgress")
-  moduleProgressData EnrollmentData[] @relation("moduleProgressData")
-  assignmentScore    EnrollmentData?  @relation("assignmentScore")
+  moduleProgress     EnrollmentData? @relation("moduleProgress")
+  lectureProgress    EnrollmentData? @relation("lectureProgress")
+  assignmentProgress EnrollmentData? @relation("assignmentProgress")
+  assignmentScore    EnrollmentData? @relation("assignmentScore")
 
   // Composite unique constraint to prevent a student from enrolling in the same course twice.
   @@unique([studentId, courseId])
   @@map("enrollment")
+}
+
+model EnrollmentData {
+  id                 String   @id @default(uuid())
+  progressPercentage Decimal? @map("progress_percentage") @db.Decimal(5, 2)
+  moduleCompleted    Decimal? @map("module_completed") @db.Decimal(5, 2)
+  moduleTotal        Int?     @map("module_total")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  moduleProgressId     String? @unique @map("module_progress_id") @db.VarChar(255)
+  lectureProgressId    String? @unique @map("lecture_progress_id") @db.VarChar(255)
+  assignmentProgressId String? @unique @map("assignment_progress_id") @db.VarChar(255)
+  assignmentScoreId    String? @unique @map("assignment_score_id") @db.VarChar(255)
+
+  enrollmentModuleProgress     Enrollment? @relation("moduleProgress", fields: [moduleProgressId], references: [id], onDelete: Cascade)
+  enrollmentLectureProgress    Enrollment? @relation("lectureProgress", fields: [lectureProgressId], references: [id], onDelete: Cascade)
+  enrollmentAssignmentProgress Enrollment? @relation("assignmentProgress", fields: [assignmentProgressId], references: [id], onDelete: Cascade)
+  enrollmentAssignmentScores   Enrollment? @relation("assignmentScore", fields: [assignmentScoreId], references: [id], onDelete: Cascade)
+
+  @@map("enrollment_data")
 }
 
 model ModuleProgress {
@@ -262,27 +286,6 @@ model ModuleProgress {
   @@map("module_progress")
 }
 
-model EnrollmentData {
-  id                 String   @id @default(uuid())
-  // progressLabel      String?  @map("progress_label") @db.VarChar(255)
-  progressPercentage Decimal? @map("progress_percentage") @db.Decimal(5, 2)
-  // countLabel         String?  @map("count_label") @db.VarChar(255)
-  moduleCompleted    Decimal? @map("module_completed") @db.Decimal(5, 2)
-  moduleTotal        Int?     @map("module_total")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
-
-  moduleProgressId     String? @unique @map("module_progress_id") @db.VarChar(255)
-  moduleProgressDataId String? @unique @map("module_progress_data_id") @db.VarChar(255)
-  assignmentScoreId    String? @unique @map("assignment_score_id") @db.VarChar(255)
-
-  moduleProgressEnrollment     Enrollment? @relation("moduleProgress", fields: [moduleProgressId], references: [id], onDelete: Cascade)
-  moduleProgressDataEnrollment Enrollment? @relation("moduleProgressData", fields: [moduleProgressDataId], references: [id], onDelete: Cascade)
-  assignmentScoresEnrollment   Enrollment? @relation("assignmentScore", fields: [assignmentScoreId], references: [id], onDelete: Cascade)
-
-  @@map("enrollment_data")
-}
-
 model Submission {
   id                   String @id @default(uuid())
   studentId            String @map("student_id") @db.VarChar(255)
@@ -290,6 +293,7 @@ model Submission {
   moduleId             String @map("module_id") @db.VarChar(255)
   submissionTemplateId String @map("submission_template_id") @db.VarChar(255)
 
+  isLocked        Boolean  @default(false) @map("is_locked")
   isGraded        Boolean  @default(false) @map("is_graded")
   isPassed        Boolean  @default(false) @map("is_passed")
   scorePercentage Decimal? @map("score_percentage") @db.Decimal(5, 2)
@@ -297,11 +301,11 @@ model Submission {
   scoreTotal      Int?     @map("score_total")
   feedback        String?  @db.Text
 
-  student            Student                @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  enrollment         Enrollment             @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  module             Module                 @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  SubmissionTemplate SubmissionTemplate     @relation(fields: [submissionTemplateId], references: [id], onDelete: Cascade)
-  submittedContents  SubmissionFieldValue[]
+  student              Student                @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  enrollment           Enrollment             @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  module               Module                 @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  submissionTemplate   SubmissionTemplate     @relation(fields: [submissionTemplateId], references: [id], onDelete: Cascade)
+  submissionFieldValue SubmissionFieldValue[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -312,10 +316,10 @@ model Submission {
 }
 
 model SubmissionFieldValue {
-  id                String @id @default(uuid())
-  submitted         String
-  submissionId      String @map("submission_id")
-  submissionFieldId String @map("submission_field_id")
+  id                String  @id @default(uuid())
+  submitted         String?
+  submissionId      String  @map("submission_id")
+  submissionFieldId String  @map("submission_field_id")
 
   submission      Submission      @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   submissionField SubmissionField @relation(fields: [submissionFieldId], references: [id], onDelete: Cascade)
@@ -332,8 +336,8 @@ model SubmissionFieldValue {
 
 model SubmissionTemplate {
   id              String @id @default(uuid())
-  submissionTitle String @map("submission_title") @db.VarChar(255)
   moduleId        String @unique @map("module_id") @db.VarChar(255)
+  submissionTitle String @map("submission_title") @db.VarChar(255)
 
   module           Module            @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   submissionFields SubmissionField[]
