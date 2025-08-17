@@ -1,6 +1,7 @@
 import { DescriptionType, ModuleType } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
   IsArray,
   IsEnum,
   IsNotEmpty,
@@ -9,6 +10,7 @@ import {
   IsUUID,
   ValidateNested,
 } from 'class-validator';
+import { CreateSubmissionFieldDto } from 'src/submission-templates/dto/create-submission-template.dto';
 
 export class CreateLinkDto {
   @IsString()
@@ -32,6 +34,19 @@ export class CreateSubdescriptionDto {
   @IsString()
   @IsOptional()
   description?: string;
+}
+
+class CreateSubmissionTemplateDto {
+  @IsOptional()
+  @IsString()
+  submissionTitle: string;
+
+  @IsNotEmpty()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => CreateSubmissionFieldDto)
+  submissionFields: CreateSubmissionFieldDto[];
 }
 
 export class CreateModuleDto {
@@ -66,4 +81,9 @@ export class CreateModuleDto {
   @ValidateNested({ each: true })
   @Type(() => CreateLinkDto)
   links?: CreateLinkDto[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateSubmissionTemplateDto)
+  submissionTemplate?: CreateSubmissionTemplateDto;
 }
