@@ -43,7 +43,7 @@ export class ModulesController {
   @Post()
   @Roles('ADMIN', 'INSTRUCTOR')
   @OwnershipService(SectionsService)
-  @OwnershipIdSource('instructor', 'body', 'sectionId')
+  @OwnershipIdSource(['instructor'], 'body', 'sectionId')
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createModuleDto: CreateModuleDto) {
     return this.modulesService.create(createModuleDto);
@@ -73,7 +73,7 @@ export class ModulesController {
 
   @Roles('ADMIN', 'INSTRUCTOR')
   @OwnershipService(ModulesService)
-  @OwnershipIdSource('instructor', 'params', 'id')
+  @OwnershipIdSource(['instructor'], 'params', 'id')
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateModuleDto: UpdateModuleDto) {
     return this.modulesService.update(id, updateModuleDto);
@@ -81,7 +81,7 @@ export class ModulesController {
 
   @Roles('ADMIN', 'INSTRUCTOR')
   @OwnershipService(ModulesService)
-  @OwnershipIdSource('instructor', 'params', 'id')
+  @OwnershipIdSource(['instructor'], 'params', 'id')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {

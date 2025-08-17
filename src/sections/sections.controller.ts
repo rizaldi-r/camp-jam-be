@@ -34,7 +34,7 @@ export class SectionsController {
   @Post()
   @Roles('ADMIN', 'INSTRUCTOR')
   @OwnershipService(CoursesService)
-  @OwnershipIdSource('instructor', 'body', 'courseId')
+  @OwnershipIdSource(['instructor'], 'body', 'courseId')
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createDto: CreateSectionDto) {
     return this.sectionsService.create(createDto);
@@ -62,7 +62,7 @@ export class SectionsController {
   @Patch(':id')
   @Roles('ADMIN', 'INSTRUCTOR')
   @OwnershipService(SectionsService)
-  @OwnershipIdSource('instructor', 'params', 'id')
+  @OwnershipIdSource(['instructor'], 'params', 'id')
   @HttpCode(HttpStatus.OK)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -74,7 +74,7 @@ export class SectionsController {
   @Delete(':id')
   @Roles('ADMIN', 'INSTRUCTOR')
   @OwnershipService(SectionsService)
-  @OwnershipIdSource('instructor', 'params', 'id')
+  @OwnershipIdSource(['instructor'], 'params', 'id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.sectionsService.remove(id);
