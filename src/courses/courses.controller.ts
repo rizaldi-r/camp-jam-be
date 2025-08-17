@@ -67,7 +67,7 @@ export class CoursesController {
   }
 
   @Roles('ADMIN', 'INSTRUCTOR')
-  @OwnershipIdSource('instructor', 'params', 'id')
+  @OwnershipIdSource(['instructor'], 'params', 'id')
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(
@@ -78,7 +78,7 @@ export class CoursesController {
   }
 
   @Roles('ADMIN', 'INSTRUCTOR')
-  @OwnershipIdSource('instructor', 'params', 'id')
+  @OwnershipIdSource(['instructor'], 'params', 'id')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseUUIDPipe) id: string) {

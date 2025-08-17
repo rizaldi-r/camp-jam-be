@@ -9,5 +9,6 @@ import { CategoriesModule } from 'src/categories/categories.module';
   imports: [InstructorsModule, CategoriesModule],
   controllers: [CoursesController],
   providers: [CoursesService, CoursesRepository],
+  exports: [CoursesService, CoursesRepository],
 })
 export class CoursesModule {}
