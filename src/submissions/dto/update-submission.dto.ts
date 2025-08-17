@@ -17,7 +17,13 @@ export class UpdateSubmissionDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => SubmissionFieldValueDto)
-  submittedContents?: SubmissionFieldValueDto[];
+  submissionFieldValueData?: SubmissionFieldValueDto[];
+}
+
+export class LockSubmissionDto {
+  @IsNotEmpty()
+  @IsBoolean()
+  isLocked: boolean;
 }
 
 export class GradeSubmissionDto {

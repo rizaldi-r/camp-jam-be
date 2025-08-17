@@ -5,16 +5,16 @@ export interface CreateSubmissionData {
   enrollmentId: string;
   moduleId: string;
   submissionTemplateId: string;
-  submittedContents: {
+  submissionFieldValueData: {
     submissionFieldId: string;
-    submitted: string;
+    submitted?: string;
   }[];
 }
 
 export interface UpdateSubmissionData {
-  submittedContents?: {
+  submissionFieldValueData?: {
     submissionFieldId: string;
-    submitted: string;
+    submitted?: string;
   }[];
 }
 
@@ -27,15 +27,19 @@ export interface GradeSubmissionData {
   feedback?: string;
 }
 
+export interface LockSubmissionData {
+  isLocked: boolean;
+}
+
 export interface SubmissionRepositoryItf {
   create(data: CreateSubmissionData): Promise<Submission>;
   findById(id: string): Promise<Submission | null>;
   findAll(): Promise<Submission[]>;
   update(
     id: string,
-    data: UpdateSubmissionData | GradeSubmissionData,
+    data: UpdateSubmissionData | GradeSubmissionData | LockSubmissionData,
   ): Promise<Submission>;
   delete(id: string): Promise<Submission>;
-  getOwnerId(id: string): Promise<string | null>;
-  getCourseOwnerId(id: string): Promise<string | null>;
+  getStudentId(id: string): Promise<string | null>;
+  getInstructorId(id: string): Promise<string | null>;
 }

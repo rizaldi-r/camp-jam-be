@@ -14,14 +14,10 @@ export class SubmissionFieldValueDto {
 
   @IsNotEmpty()
   @IsString()
-  submitted: string;
+  submitted?: string;
 }
 
 export class CreateSubmissionDto {
-  @IsNotEmpty()
-  @IsUUID()
-  submissionTemplateId: string;
-
   @IsNotEmpty()
   @IsUUID()
   moduleId: string;
@@ -31,12 +27,8 @@ export class CreateSubmissionDto {
   enrollmentId: string;
 
   @IsNotEmpty()
-  @IsUUID()
-  studentId: string;
-
-  @IsNotEmpty()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => SubmissionFieldValueDto)
-  submittedContents: SubmissionFieldValueDto[];
+  submissionFieldValueData: SubmissionFieldValueDto[];
 }

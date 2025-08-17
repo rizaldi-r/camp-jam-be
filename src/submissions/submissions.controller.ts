@@ -1,14 +1,10 @@
 import {
   Controller,
-  Post,
   Get,
   Patch,
-  Delete,
   Body,
   Param,
   UseGuards,
-  HttpCode,
-  HttpStatus,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { Submission } from '@prisma/client';
@@ -21,12 +17,17 @@ import {
   OwnershipIdSource,
   OwnershipService,
 } from 'src/_common/decorators/ownership.decorator';
-import { CreateSubmissionDto } from 'src/submissions/dto/create-submission.dto';
+// import { CreateSubmissionDto } from 'src/submissions/dto/create-submission.dto';
 import { SubmissionsService } from 'src/submissions/submissions.service';
 import {
   GradeSubmissionDto,
+  LockSubmissionDto,
   UpdateSubmissionDto,
 } from 'src/submissions/dto/update-submission.dto';
+import { ModulesService } from 'src/modules/modules.service';
+// import { CurrentUser } from 'src/_common/decorators/current-user.decorator';
+// import { UserType } from 'src/_common/types/user.type';
+// import { EnrollmentsService } from 'src/enrollments/enrollments.service';
 
 @Controller('submissions')
 @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnershipGuard)
@@ -34,19 +35,20 @@ import {
 export class SubmissionsController {
   constructor(private readonly submissionsService: SubmissionsService) {}
 
-  @Post()
-  @Roles('STUDENT')
-  // @OwnershipService(ModulesService)
-  // @OwnershipIdSource('body', 'enrollmentId')
-  @HttpCode(HttpStatus.CREATED)
-  create(
-    @Body() createSubmissionDto: CreateSubmissionDto,
-    // @User() user: IJwtPayload,
-  ): Promise<Submission> {
-    // The studentId is taken from the JWT payload for security, not the request body.
-    // createSubmissionDto.studentId = user.sub;
-    return this.submissionsService.createSubmission(createSubmissionDto);
-  }
+  // @Post()
+  // @Roles('STUDENT', 'ADMIN')
+  // @OwnershipService(EnrollmentsService)
+  // @OwnershipIdSource(['student'], 'body', 'enrollmentId')
+  // @HttpCode(HttpStatus.CREATED)
+  // create(
+  //   @Body() createSubmissionDto: CreateSubmissionDto,
+  //   @CurrentUser() user: UserType,
+  // ): Promise<Submission> {
+  //   return this.submissionsService.createSubmission(
+  //     user.student.id,
+  //     createSubmissionDto,
+  //   );
+  // }
 
   @Get()
   @Roles('ADMIN')
@@ -56,15 +58,15 @@ export class SubmissionsController {
 
   @Get(':id')
   @OwnershipService(SubmissionsService)
-  @OwnershipIdSource('student', 'params', 'id')
+  @OwnershipIdSource(['student'], 'params', 'id')
   async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Submission> {
     return this.submissionsService.getSubmissionById(id);
   }
 
   @Patch(':id')
-  @Roles('STUDENT')
+  @Roles('ADMIN', 'STUDENT')
   @OwnershipService(SubmissionsService)
-  @OwnershipIdSource('student', 'params', 'id')
+  @OwnershipIdSource(['student'], 'params', 'id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSubmissionDto: UpdateSubmissionDto,
@@ -72,19 +74,39 @@ export class SubmissionsController {
     return this.submissionsService.updateSubmission(id, updateSubmissionDto);
   }
 
-  @Delete(':id')
-  @Roles('STUDENT')
-  @OwnershipService(SubmissionsService)
-  @OwnershipIdSource('student', 'params', 'id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<Submission> {
-    return this.submissionsService.deleteSubmission(id);
+  // @Delete(':id')
+  // @Roles('ADMIN', 'STUDENT')
+  // @OwnershipService(SubmissionsService)
+  // @OwnershipIdSource(['student'], 'params', 'id')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // remove(@Param('id', ParseUUIDPipe) id: string): Promise<Submission> {
+  //   return this.submissionsService.deleteSubmission(id);
+  // }
+
+  @Patch(':id/lock')
+  @Roles('INSTRUCTOR', 'ADMIN')
+  lock(@Param('id') id: string, @Body() lockDto: LockSubmissionDto) {
+    return this.submissionsService.lockSubmission(id, lockDto);
+  }
+
+  @Patch('modules/:moduleId/lock')
+  @Roles('INSTRUCTOR', 'ADMIN')
+  @OwnershipService(ModulesService)
+  @OwnershipIdSource(['instructor'], 'params', 'moduleId')
+  async lockSubmissionsByModuleId(
+    @Param('moduleId', ParseUUIDPipe) moduleId: string,
+    @Body() lockDto: LockSubmissionDto,
+  ) {
+    return this.submissionsService.lockSubmissionsByModuleId(
+      moduleId,
+      lockDto.isLocked,
+    );
   }
 
   @Patch('grade/:id')
   @Roles('INSTRUCTOR', 'ADMIN')
   @OwnershipService(SubmissionsService)
-  @OwnershipIdSource('instructor', 'params', 'id')
+  @OwnershipIdSource(['instructor'], 'params', 'id')
   grade(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() gradeSubmissionDto: GradeSubmissionDto,
