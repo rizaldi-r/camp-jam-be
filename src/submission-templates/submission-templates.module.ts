@@ -6,5 +6,6 @@ import { SubmissionTemplatesService } from 'src/submission-templates/submission-
 @Module({
   controllers: [SubmissionTemplatesController],
   providers: [SubmissionTemplatesService, SubmissionTemplatesRepository],
+  exports: [SubmissionTemplatesService, SubmissionTemplatesRepository],
 })
 export class SubmissionTemplatesModule {}

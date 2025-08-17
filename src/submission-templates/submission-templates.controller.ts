@@ -39,7 +39,7 @@ export class SubmissionTemplatesController {
   @Post()
   @Roles('ADMIN', 'INSTRUCTOR')
   @OwnershipService(ModulesService)
-  @OwnershipIdSource('instructor', 'body', 'moduleId')
+  @OwnershipIdSource(['instructor'], 'body', 'moduleId')
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createSubmissionTemplateDto: CreateSubmissionTemplateDto) {
     return this.submissionTemplatesService.createTemplate(
@@ -63,10 +63,15 @@ export class SubmissionTemplatesController {
     return this.submissionTemplatesService.getTemplateByModuleId(moduleId);
   }
 
+  @Get('by-course/:courseId')
+  findByCourseId(@Param('courseId', ParseUUIDPipe) courseId: string) {
+    return this.submissionTemplatesService.getTemplateByCourseId(courseId);
+  }
+
   @Patch(':id')
   @Roles('ADMIN', 'INSTRUCTOR')
   @OwnershipService(SubmissionTemplatesService)
-  @OwnershipIdSource('instructor', 'params', 'id')
+  @OwnershipIdSource(['instructor'], 'params', 'id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSubmissionTemplateDto: UpdateSubmissionTemplateDto,
@@ -80,7 +85,7 @@ export class SubmissionTemplatesController {
   @Delete(':id')
   @Roles('ADMIN', 'INSTRUCTOR')
   @OwnershipService(SubmissionTemplatesService)
-  @OwnershipIdSource('instructor', 'params', 'id')
+  @OwnershipIdSource(['instructor'], 'params', 'id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.submissionTemplatesService.deleteTemplate(id);

@@ -1,7 +1,7 @@
 // src/submission-template/submission-template.service.ts
 
 import { Injectable } from '@nestjs/common';
-import { SubmissionTemplate } from '@prisma/client';
+import { SubmissionField, SubmissionTemplate } from '@prisma/client';
 import { ResourceNotFoundException } from 'src/_common/exceptions/custom-not-found.exception';
 import { CreateSubmissionTemplateDto } from 'src/submission-templates/dto/create-submission-template.dto';
 import { UpdateSubmissionTemplateDto } from 'src/submission-templates/dto/update-submission-template.dto';
@@ -50,6 +50,28 @@ export class SubmissionTemplatesService {
       );
     }
     return template;
+  }
+
+  async getTemplateByCourseId(courseId: string): Promise<SubmissionTemplate[]> {
+    const template =
+      await this.submissionTemplatesRepository.findByCourseId(courseId);
+    if (!template) {
+      throw new ResourceNotFoundException(
+        'SubmissionTemplate',
+        'courseId',
+        courseId,
+      );
+    }
+    return template;
+  }
+
+  async getSubmissionFieldsByTemplateId(
+    templateId: string,
+  ): Promise<SubmissionField[]> {
+    await this.getTemplateById(templateId);
+    return this.submissionTemplatesRepository.findFieldsByTemplateId(
+      templateId,
+    );
   }
 
   async updateTemplate(

@@ -2,7 +2,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, SubmissionTemplate } from '@prisma/client';
+import { Prisma, SubmissionField, SubmissionTemplate } from '@prisma/client';
 import {
   CreateSubmissionTemplateData,
   SubmissionTemplateRepositoryItf,
@@ -71,10 +71,34 @@ export class SubmissionTemplatesRepository
     });
   }
 
+  async findByCourseId(courseId: string): Promise<SubmissionTemplate[]> {
+    return this.prisma.submissionTemplate.findMany({
+      where: {
+        module: {
+          section: {
+            courseId: courseId,
+          },
+        },
+      },
+      include: {
+        submissionFields: true,
+      },
+    });
+  }
+
   async findAll(): Promise<SubmissionTemplate[]> {
     return this.prisma.submissionTemplate.findMany({
       include: {
         submissionFields: true,
+      },
+    });
+  }
+
+  async findFieldsByTemplateId(templateId: string): Promise<SubmissionField[]> {
+    return this.prisma.submissionField.findMany({
+      where: { submissionTemplateId: templateId },
+      include: {
+        submissionTemplate: true,
       },
     });
   }
