@@ -17,7 +17,7 @@ export const AllowAdminBypassOwnership = () =>
   SetMetadata(ALLOW_ADMIN_BYPASS_OWNERSHIP_KEY, true);
 
 export const OwnershipIdSource = (
-  userRole: UserRoleType,
+  userRole: UserRoleType[],
   source: keyof Request,
   key: string,
 ) => SetMetadata(OWNERSHIP_ID_SOURCE_KEY, [userRole, source, key]);
