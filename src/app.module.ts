@@ -13,6 +13,8 @@ import { SectionsModule } from './sections/sections.module';
 import { ModulesModule } from './modules/modules.module';
 import { SubmissionTemplatesModule } from './submission-templates/submission-templates.module';
 import { SubmissionsModule } from './submissions/submissions.module';
+import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { ModuleProgressModule } from './module-progress/module-progress.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { SubmissionsModule } from './submissions/submissions.module';
     ModulesModule,
     SubmissionTemplatesModule,
     SubmissionsModule,
+    EnrollmentsModule,
+    ModuleProgressModule,
   ],
   controllers: [AppController],
   providers: [AppService],
