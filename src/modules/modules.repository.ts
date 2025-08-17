@@ -1,7 +1,7 @@
 // src/module/module.repository.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Module } from '@prisma/client';
+import { Course, Module } from '@prisma/client';
 import {
   CreateModuleData,
   UpdateModuleData,
@@ -12,7 +12,7 @@ export class ModulesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   // test search for parent
-  async findCourseByModuleId(moduleId: string) {
+  async findCourseByModuleId(moduleId: string): Promise<Course | null> {
     const module = await this.prisma.module.findUnique({
       where: { id: moduleId },
       select: {
