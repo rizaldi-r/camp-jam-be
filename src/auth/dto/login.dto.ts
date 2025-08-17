@@ -1,8 +1,10 @@
 import {
+  IsBooleanString,
   IsEmail,
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUrl,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -24,4 +26,20 @@ export class LoginDto {
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   @MaxLength(255, { message: 'Password cannot be longer than 255 characters' })
   password: string;
+
+  @IsOptional()
+  @IsBooleanString()
+  redirect?: string;
+
+  @IsOptional()
+  @IsString()
+  csrfToken?: string;
+
+  @IsOptional()
+  @IsString()
+  callbackUrl?: string;
+
+  @IsOptional()
+  @IsBooleanString()
+  json?: string;
 }
