@@ -18,6 +18,8 @@ async function bootstrap() {
   // global error catching
   app.useGlobalFilters(new ExceptionsFilter());
 
-  await app.listen(process.env.PORT ?? 3000);
+  app.enableCors();
+
+  await app.listen(process.env.PORT ?? 3001);
 }
 bootstrap();
