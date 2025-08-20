@@ -1,4 +1,9 @@
-import { CourseStatus, Enrollment } from '@prisma/client';
+import {
+  CourseStatus,
+  Enrollment,
+  EnrollmentData,
+  Prisma,
+} from '@prisma/client';
 
 export interface CreateEnrollmentData {
   studentId: string;
@@ -10,9 +15,29 @@ export interface UpdateEnrollmentData {
   status?: CourseStatus;
 }
 
+export interface UpdateEnrollmentDataData {
+  progressPercentage: Prisma.Decimal | null;
+  moduleCompleted: Prisma.Decimal | null;
+  moduleTotal: number | null;
+}
+
+export interface FindAllCoursesQuery {
+  includeSubmissions?: boolean;
+  includeAllProgress?: boolean;
+  includeCourse?: boolean;
+  courseId?: string;
+  courseCategoryId?: string;
+}
+
+export interface EnrollmentWithProgressIds extends Enrollment {
+  moduleProgress?: EnrollmentData | null;
+  lectureProgress?: EnrollmentData | null;
+  assignmentProgress?: EnrollmentData | null;
+}
+
 export interface EnrollmentRepositoryItf {
   create(data: CreateEnrollmentData): Promise<Enrollment>;
-  findById(id: string): Promise<Enrollment | null>;
+  findById(id: string): Promise<EnrollmentWithProgressIds | null>;
   findByStudentAndCourse(
     studentId: string,
     courseId: string,

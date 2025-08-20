@@ -11,10 +11,9 @@ import { ModuleProgressModule } from 'src/module-progress/module-progress.module
 @Module({
   imports: [
     forwardRef(() => ModulesModule),
-    // ModulesModule,
+    forwardRef(() => SubmissionsModule),
     CoursesModule,
     SubmissionTemplatesModule,
-    SubmissionsModule,
     ModuleProgressModule,
   ],
   controllers: [EnrollmentsController],

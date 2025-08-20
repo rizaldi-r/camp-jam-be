@@ -10,6 +10,8 @@ import {
   HttpStatus,
   ParseUUIDPipe,
   Post,
+  Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { Enrollment } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -27,8 +29,11 @@ import { UserType } from 'src/_common/types/user.type';
 import { UpdateEnrollmentDto } from 'src/enrollments/dto/update-enrollment.dto';
 import { CreateEnrollmentDto } from 'src/enrollments/dto/create-enrollment.dto';
 import { CoursesService } from 'src/courses/courses.service';
+import { FindAllEnrollmentQueryDto } from 'src/enrollments/dto/find-enrollment.dto';
+import { BodyTransformerInterceptor } from 'src/_common/interceptors/body-transformer.interceptor';
 
 @Controller('enrollments')
+@UseInterceptors(BodyTransformerInterceptor)
 @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnershipGuard)
 @AllowAdminBypassOwnership()
 export class EnrollmentsController {
@@ -63,11 +68,17 @@ export class EnrollmentsController {
   }
 
   @Get('by-student')
-  @Roles('ADMIN', 'STUDENT')
+  @Roles('STUDENT')
   // @OwnershipService(EnrollmentsService)
   // @OwnershipIdSource(['student'], 'params', 'studentId')
-  getEnrollmentsByStudentId(@CurrentUser() user: UserType) {
-    return this.enrollmentsService.getEnrollmentsByStudentId(user.student.id);
+  getEnrollmentsByStudentId(
+    @CurrentUser() user: UserType,
+    @Query() query: FindAllEnrollmentQueryDto,
+  ) {
+    return this.enrollmentsService.getEnrollmentsByStudentId(
+      user.student.id,
+      query,
+    );
   }
 
   @Get(':id')
