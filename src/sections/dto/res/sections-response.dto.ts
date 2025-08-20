@@ -1,19 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { IsString, IsUUID } from 'class-validator';
-
-class ModuleResponseDto {
-  @Expose()
-  @IsUUID()
-  id: string;
-
-  @Expose()
-  @IsString()
-  title: string;
-
-  @Expose()
-  @IsString()
-  description: string;
-}
+import { ModuleResponseDto } from 'src/modules/dto/res/module-response.dto';
 
 export class SectionResponseDto {
   @Expose()
