@@ -112,7 +112,7 @@ model Course {
   startDate         DateTime? @map("start_date")
   endDate           DateTime? @map("end_date")
   isMemberOnly      Boolean   @default(true) @map("is_member_only")
-  isLocked          Boolean   @default(false) @map("is_locked")
+  isLocked          Boolean   @default(true) @map("is_locked")
   instructorId      String    @map("instructor_id") @db.VarChar(255)
   allowedPrograms   Program[] @map("allowed_programs")
   allowedBatchYears Int[]     @map("allowed_batch_years")
@@ -293,13 +293,13 @@ model Submission {
   moduleId             String @map("module_id") @db.VarChar(255)
   submissionTemplateId String @map("submission_template_id") @db.VarChar(255)
 
-  isLocked        Boolean  @default(false) @map("is_locked")
-  isGraded        Boolean  @default(false) @map("is_graded")
-  isPassed        Boolean  @default(false) @map("is_passed")
-  scorePercentage Decimal? @map("score_percentage") @db.Decimal(5, 2)
-  scoreAchieved   Decimal? @map("score_achieved") @db.Decimal(5, 2)
-  scoreTotal      Int?     @map("score_total")
-  feedback        String?  @db.Text
+  isLocked        Boolean @default(false) @map("is_locked")
+  isGraded        Boolean @default(false) @map("is_graded")
+  isPassed        Boolean @default(false) @map("is_passed")
+  scorePercentage Decimal @default(0) @map("score_percentage") @db.Decimal(5, 2)
+  scoreAchieved   Decimal @default(0) @map("score_achieved") @db.Decimal(5, 2)
+  scoreTotal      Int     @default(100) @map("score_total")
+  feedback        String? @db.Text
 
   student              Student                @relation(fields: [studentId], references: [id], onDelete: Cascade)
   enrollment           Enrollment             @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
@@ -335,9 +335,11 @@ model SubmissionFieldValue {
 // ---------------------
 
 model SubmissionTemplate {
-  id              String @id @default(uuid())
-  moduleId        String @unique @map("module_id") @db.VarChar(255)
-  submissionTitle String @map("submission_title") @db.VarChar(255)
+  id              String    @id @default(uuid())
+  moduleId        String    @unique @map("module_id") @db.VarChar(255)
+  submissionTitle String    @map("submission_title") @db.VarChar(255)
+  endDate         DateTime? @map("end_date")
+  scoreTotal      Int       @default(100) @map("score_total")
 
   module           Module            @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   submissionFields SubmissionField[]
