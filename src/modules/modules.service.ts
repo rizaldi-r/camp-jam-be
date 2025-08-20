@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ResourceNotFoundException } from '../_common/exceptions/custom-not-found.exception';
 import { ModulesRepository } from 'src/modules/modules.repository';
 import { CreateModuleDto } from 'src/modules/dto/create-module.dto';
@@ -57,7 +57,13 @@ export class ModulesService {
     );
 
     // 4. Check if the module is an assignment and if a template was provided
-    if (newModule.moduleType === ModuleType.ASSIGNMENT && submissionTemplate) {
+    if (newModule.moduleType === ModuleType.ASSIGNMENT) {
+      if (!submissionTemplate) {
+        throw new BadRequestException(
+          'need to add submissionTemplate for assignment',
+        );
+      }
+
       // 5. Create the new submission template
       const newSubmissionTemplate =
         await this.submissionTemplatesService.createTemplate({
@@ -82,6 +88,7 @@ export class ModulesService {
           this.submissionsService.createSubmission(enrollment.studentId, {
             moduleId: newModule.id,
             enrollmentId: enrollment.id,
+            scoreTotal: newSubmissionTemplate.scoreTotal || 100,
             submissionFieldValueData,
           }),
         ),

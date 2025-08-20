@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Course, Module } from '@prisma/client';
 import {
   CreateModuleData,
+  ModuleWithChildrens,
   UpdateModuleData,
 } from 'src/modules/types/modules.repository.interface';
 
@@ -41,7 +42,7 @@ export class ModulesRepository {
     });
   }
 
-  async findByCourseId(courseId: string): Promise<Module[]> {
+  async findByCourseId(courseId: string): Promise<ModuleWithChildrens[]> {
     return this.prisma.module.findMany({
       where: {
         section: {

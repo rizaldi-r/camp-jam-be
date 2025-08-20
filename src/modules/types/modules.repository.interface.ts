@@ -1,4 +1,9 @@
-import { DescriptionType, ModuleType } from '@prisma/client';
+import {
+  DescriptionType,
+  Module,
+  ModuleType,
+  SubmissionTemplate,
+} from '@prisma/client';
 
 export interface LinkData {
   label: string;
@@ -29,3 +34,9 @@ export interface UpdateModuleData {
   links?: LinkData[];
   subdescriptions?: SubdescriptionData[];
 }
+
+export type ModuleWithChildrens = Module & {
+  links: any[];
+  subdescriptions: any[];
+  submissionTemplate: (SubmissionTemplate & { submissionFields: any[] }) | null;
+};

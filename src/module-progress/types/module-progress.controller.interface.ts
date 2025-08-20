@@ -22,4 +22,13 @@ export interface ModuleProgressRepositoryItf {
   delete(id: string): Promise<ModuleProgress>;
   getStudentOwnerId(id: string): Promise<string | null>;
   getInstructorOwnerId(id: string): Promise<string | null>;
+  updateAndRecalculateProgress(
+    id: string,
+    data: UpdateModuleProgressData,
+    moduleType: string,
+    isMarkingComplete: boolean,
+    enrollmentModuleProgressId?: string,
+    enrollmentLectureProgressId?: string,
+    enrollmentAssignmentProgressId?: string,
+  ): Promise<ModuleProgress>;
 }

@@ -1,27 +1,32 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { CreateModuleProgressDto } from './dto/create-module-progress.dto';
 import { UpdateModuleProgressDto } from './dto/update-module-progress.dto';
 import { ModuleProgress } from '@prisma/client';
 import { ResourceNotFoundException } from 'src/_common/exceptions/custom-not-found.exception';
 
 import { ModuleProgressRepository } from './module-progress.repository';
+import { ModulesService } from 'src/modules/modules.service';
+import { EnrollmentsService } from 'src/enrollments/enrollments.service';
 
 @Injectable()
 export class ModuleProgressService {
   constructor(
     private readonly moduleProgressRepository: ModuleProgressRepository,
+    @Inject(forwardRef(() => EnrollmentsService))
+    private readonly enrollmentsService: EnrollmentsService,
+    @Inject(forwardRef(() => ModulesService))
+    private readonly modulesService: ModulesService,
   ) {}
 
   async isStudentOwner(id: string, studentId: string): Promise<boolean> {
     const ownerId = await this.moduleProgressRepository.getStudentOwnerId(id);
     return ownerId === studentId;
   }
-
-  // async isInstructorOwner(id: string, instructorId: string): Promise<boolean> {
-  //   const ownerId =
-  //     await this.moduleProgressRepository.getInstructorOwnerId(id);
-  //   return ownerId === instructorId;
-  // }
 
   async createModuleProgress(
     data: CreateModuleProgressDto,
@@ -67,8 +72,44 @@ export class ModuleProgressService {
     id: string,
     data: UpdateModuleProgressDto,
   ): Promise<ModuleProgress> {
-    await this.getModuleProgressById(id);
-    return this.moduleProgressRepository.update(id, data);
+    // Retrieve the existing module progress
+    const existingProgress = await this.getModuleProgressById(id);
+
+    // Check if the completion status is changing
+    const isMarkingComplete =
+      data.isCompleted === true && existingProgress.isCompleted === false;
+    const isMarkingIncomplete =
+      data.isCompleted === false && existingProgress.isCompleted === true;
+
+    // This block runs only if the completion status is explicitly changing.
+    if (isMarkingComplete || isMarkingIncomplete) {
+      // Retrieve the associated enrollment and module for progress updates
+      const enrollment = await this.enrollmentsService.getEnrollmentById(
+        existingProgress.enrollmentId,
+      );
+
+      const module = await this.modulesService.findById(
+        existingProgress.moduleId,
+      );
+
+      // Update the progress and handle the transaction for atomicity.
+      // We pass a flag to the repository method to indicate if it's a completion or un-completion.
+      const updatedProgress =
+        await this.moduleProgressRepository.updateAndRecalculateProgress(
+          id,
+          data,
+          module.moduleType,
+          isMarkingComplete,
+          enrollment.moduleProgress?.id,
+          enrollment.lectureProgress?.id,
+          enrollment.assignmentProgress?.id,
+        );
+
+      return updatedProgress;
+    } else {
+      // If there's no change in the completion status, or if the update doesn't include it,
+      return this.moduleProgressRepository.update(id, data);
+    }
   }
 
   async deleteModuleProgress(id: string): Promise<ModuleProgress> {

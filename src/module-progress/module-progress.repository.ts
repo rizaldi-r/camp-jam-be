@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ModuleProgress } from '@prisma/client';
+import { EnrollmentData, ModuleProgress } from '@prisma/client';
 import {
   CreateModuleProgressData,
   ModuleProgressRepositoryItf,
@@ -97,5 +97,81 @@ export class ModuleProgressRepository implements ModuleProgressRepositoryItf {
 
   async delete(id: string): Promise<ModuleProgress> {
     return this.prisma.moduleProgress.delete({ where: { id } });
+  }
+
+  async updateAndRecalculateProgress(
+    id: string,
+    data: UpdateModuleProgressData,
+    moduleType: string,
+    isMarkingComplete: boolean,
+    enrollmentModuleProgressId?: string,
+    enrollmentLectureProgressId?: string,
+    enrollmentAssignmentProgressId?: string,
+  ): Promise<ModuleProgress> {
+    const operation = isMarkingComplete ? 'increment' : 'decrement';
+
+    return this.prisma.$transaction(async (prisma) => {
+      // 1. Update the module progress record itself.
+      const updatedModuleProgress = await prisma.moduleProgress.update({
+        where: { id },
+        data,
+      });
+
+      // 2. Update the main module progress record (moduleCompleted).
+      const updatedEnrollmentModuleProgress =
+        await prisma.enrollmentData.update({
+          where: { id: enrollmentModuleProgressId },
+          data: {
+            moduleCompleted: {
+              [operation]: 1,
+            },
+          },
+        });
+
+      // 3. Update the specific module type progress (lecture or assignment).
+      let updatedModuleTypeProgress: EnrollmentData;
+      let targetEnrollmentId: string | undefined;
+
+      if (moduleType === 'LECTURE') {
+        targetEnrollmentId = enrollmentLectureProgressId;
+      } else if (moduleType === 'ASSIGNMENT') {
+        targetEnrollmentId = enrollmentAssignmentProgressId;
+      }
+
+      if (targetEnrollmentId) {
+        updatedModuleTypeProgress = await prisma.enrollmentData.update({
+          where: { id: targetEnrollmentId },
+          data: {
+            moduleCompleted: {
+              [operation]: 1,
+            },
+          },
+        });
+
+        // Recalculate and update the progress percentage for the specific module type.
+        await prisma.enrollmentData.update({
+          where: { id: targetEnrollmentId },
+          data: {
+            progressPercentage:
+              (Number(updatedModuleTypeProgress.moduleCompleted) /
+                Number(updatedModuleTypeProgress.moduleTotal)) *
+              100,
+          },
+        });
+      }
+
+      // 4. Recalculate and update the progress percentage for the overall modules.
+      await prisma.enrollmentData.update({
+        where: { id: enrollmentModuleProgressId },
+        data: {
+          progressPercentage:
+            (Number(updatedEnrollmentModuleProgress.moduleCompleted) /
+              Number(updatedEnrollmentModuleProgress.moduleTotal)) *
+            100,
+        },
+      });
+
+      return updatedModuleProgress;
+    });
   }
 }
