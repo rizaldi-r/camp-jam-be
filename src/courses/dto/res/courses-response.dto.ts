@@ -1,5 +1,15 @@
+import { Program } from '@prisma/client';
 import { Exclude, Expose, Type } from 'class-transformer';
-import { IsString, IsUUID } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { CategoryResponseDto } from 'src/categories/dto/res/categories-response.dto';
 import { InstructorResponseDto } from 'src/instructors/dto/res/instructors-response-body.dto';
 import { SectionResponseDto } from 'src/sections/dto/res/sections-response.dto';
@@ -14,31 +24,51 @@ export class CourseResponseDto {
   title: string;
 
   @Expose()
+  @IsOptional()
   @IsString()
   imageSrc: string | null;
 
   @Expose()
+  @IsOptional()
   @IsString()
   imageAlt: string | null;
 
   @Expose()
+  @IsOptional()
   @IsString()
   description: string | null;
 
   @Expose()
-  instructorId: string;
+  @IsOptional()
+  @IsDateString()
+  startDate: string | null;
 
   @Expose()
-  allowedPrograms: string[];
+  @IsOptional()
+  @IsDateString()
+  endDate: string | null;
 
   @Expose()
-  allowedBatchYears: number[];
-
-  @Expose()
+  @IsBoolean()
   isMemberOnly: boolean;
 
   @Expose()
+  @IsBoolean()
   isLocked: boolean;
+
+  @Expose()
+  @IsUUID()
+  instructorId: string;
+
+  @Expose()
+  @IsArray()
+  @IsEnum(Program, { each: true })
+  allowedPrograms: Program[];
+
+  @Expose()
+  @IsArray()
+  @IsInt({ each: true })
+  allowedBatchYears: number[];
 
   // Nested DTOs for related data, transformed using @Type()
   @Expose()

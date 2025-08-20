@@ -89,6 +89,7 @@ export class CoursesRepository {
             user: true,
           },
         },
+        sections: { include: { modules: true } },
         categories: {
           include: {
             category: true,
