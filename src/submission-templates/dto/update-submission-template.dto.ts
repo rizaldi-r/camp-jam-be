@@ -2,6 +2,7 @@ import {
   IsArray,
   IsBoolean,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
@@ -23,9 +24,9 @@ export class UpdateSubmissionTemplateDto {
   @IsString()
   submissionTitle: string;
 
-  // @IsOptional()
-  // @IsUUID()
-  // moduleId?: string;
+  @IsOptional()
+  @IsNumber()
+  scoreTotal?: number;
 
   @IsOptional()
   @IsArray()

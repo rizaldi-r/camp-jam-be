@@ -69,6 +69,17 @@ export class SubmissionsRepository implements SubmissionRepositoryItf {
     });
   }
 
+  async findByEnrollmentId(enrollmentId: string): Promise<Submission[]> {
+    return this.prisma.submission.findMany({
+      where: {
+        enrollmentId,
+      },
+      include: {
+        submissionFieldValue: { include: { submissionField: true } },
+      },
+    });
+  }
+
   // TODO: seperate this
   async update(
     id: string,
@@ -92,7 +103,6 @@ export class SubmissionsRepository implements SubmissionRepositoryItf {
       updateData.isPassed = data.isPassed;
       updateData.scorePercentage = data.scorePercentage;
       updateData.scoreAchieved = data.scoreAchieved;
-      updateData.scoreTotal = data.scoreTotal;
       updateData.feedback = data.feedback;
     }
 
@@ -118,6 +128,16 @@ export class SubmissionsRepository implements SubmissionRepositoryItf {
       data: {
         isLocked,
       },
+    });
+  }
+
+  async lockAllByTemplateId(
+    templateId: string,
+    isLocked: boolean,
+  ): Promise<void> {
+    await this.prisma.submission.updateMany({
+      where: { submissionTemplateId: templateId },
+      data: { isLocked },
     });
   }
 

@@ -19,11 +19,11 @@ export interface UpdateSubmissionData {
 }
 
 export interface GradeSubmissionData {
-  isGraded: boolean;
   isPassed?: boolean;
-  scorePercentage?: Prisma.Decimal;
+  isGraded: boolean;
   scoreAchieved?: Prisma.Decimal;
-  scoreTotal?: number;
+  scorePercentage?: Prisma.Decimal;
+  // scoreTotal?: number;
   feedback?: string;
 }
 

@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsNotEmpty,
+  IsNumber,
   IsString,
   IsUUID,
   ValidateNested,
@@ -25,6 +26,10 @@ export class CreateSubmissionDto {
   @IsNotEmpty()
   @IsUUID()
   enrollmentId: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  scoreTotal: number;
 
   @IsNotEmpty()
   @IsArray()

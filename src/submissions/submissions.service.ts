@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { Submission, SubmissionFieldValue } from '@prisma/client';
+import { Prisma, Submission, SubmissionFieldValue } from '@prisma/client';
 import { ResourceNotFoundException } from 'src/_common/exceptions/custom-not-found.exception';
+import { EnrollmentsService } from 'src/enrollments/enrollments.service';
 import { SubmissionTemplatesService } from 'src/submission-templates/submission-templates.service';
 import { CreateSubmissionDto } from 'src/submissions/dto/create-submission.dto';
 import {
@@ -15,6 +16,7 @@ export class SubmissionsService {
   constructor(
     private readonly submissionsRepository: SubmissionsRepository,
     private readonly submissionTemplatesService: SubmissionTemplatesService,
+    private readonly enrollmentsService: EnrollmentsService,
   ) {}
 
   async isStudentOwner(
@@ -62,6 +64,12 @@ export class SubmissionsService {
     return this.submissionsRepository.findAll();
   }
 
+  async getSubmissionsByEnrollmentId(
+    enrollmentId: string,
+  ): Promise<Submission[]> {
+    return this.submissionsRepository.findByEnrollmentId(enrollmentId);
+  }
+
   async updateSubmission(
     id: string,
     data: UpdateSubmissionDto,
@@ -79,8 +87,34 @@ export class SubmissionsService {
     id: string,
     data: GradeSubmissionDto,
   ): Promise<Submission> {
+    const { scoreAchieved, ...otherData } = data;
+
     await this.getSubmissionById(id);
-    return this.submissionsRepository.update(id, data);
+
+    // 1. Fetch the submission and its related data to get the total score and enrollment ID.
+    const submission = await this.getSubmissionById(id);
+    const submissionTemplate =
+      await this.submissionTemplatesService.getTemplateByModuleId(
+        submission.moduleId,
+      );
+
+    const scoreTotal = submissionTemplate.scoreTotal;
+
+    // 2. Calculate the score percentage and update the submission.
+    const scorePercentage =
+      scoreTotal > 0 ? (scoreAchieved / scoreTotal) * 100 : 0;
+
+    const updatedSubmission = await this.submissionsRepository.update(id, {
+      ...otherData,
+      isGraded: true,
+      scoreAchieved: new Prisma.Decimal(scoreAchieved),
+      scorePercentage: new Prisma.Decimal(scorePercentage),
+    });
+
+    // 3. update enrollment data
+    await this.enrollmentsService.updateEnrollmentProgressAfterGrading(id);
+
+    return updatedSubmission;
   }
 
   async lockSubmission(
@@ -96,6 +130,13 @@ export class SubmissionsService {
     isLocked: boolean,
   ): Promise<void> {
     await this.submissionsRepository.lockAllByModuleId(moduleId, isLocked);
+  }
+
+  async lockSubmissionsByTemplateId(
+    templateId: string,
+    isLocked: boolean,
+  ): Promise<void> {
+    await this.submissionsRepository.lockAllByTemplateId(templateId, isLocked);
   }
 
   async deleteSubmission(id: string): Promise<Submission> {

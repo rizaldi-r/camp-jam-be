@@ -4,6 +4,7 @@ import {
   IsArray,
   IsBoolean,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -28,6 +29,10 @@ export class CreateSubmissionTemplateDto {
   @IsUUID()
   @IsNotEmpty()
   moduleId: string;
+
+  @IsOptional()
+  @IsNumber()
+  scoreTotal?: number;
 
   @IsNotEmpty()
   @IsArray()

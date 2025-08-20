@@ -2,14 +2,12 @@ import {
   IsArray,
   IsBoolean,
   IsDecimal,
-  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Prisma } from '@prisma/client';
 import { SubmissionFieldValueDto } from 'src/submissions/dto/create-submission.dto';
 
 export class UpdateSubmissionDto {
@@ -27,25 +25,25 @@ export class LockSubmissionDto {
 }
 
 export class GradeSubmissionDto {
+  // @IsNotEmpty()
+  // @IsBoolean()
+  // isGraded: boolean;
+
   @IsNotEmpty()
   @IsBoolean()
-  isGraded: boolean;
+  isPassed: boolean;
 
-  @IsOptional()
-  @IsBoolean()
-  isPassed?: boolean;
+  // @IsOptional()
+  // @IsDecimal()
+  // scorePercentage?: Prisma.Decimal;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsDecimal()
-  scorePercentage?: Prisma.Decimal;
+  scoreAchieved: number;
 
-  @IsOptional()
-  @IsDecimal()
-  scoreAchieved?: Prisma.Decimal;
-
-  @IsOptional()
-  @IsInt()
-  scoreTotal?: number;
+  // @IsOptional()
+  // @IsInt()
+  // scoreTotal?: number;
 
   @IsOptional()
   @IsString()

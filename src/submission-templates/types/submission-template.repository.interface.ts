@@ -3,6 +3,7 @@ import { SubmissionTemplate } from '@prisma/client';
 // Interfaces for the data used in repository methods
 export interface CreateSubmissionTemplateData {
   submissionTitle: string;
+  scoreTotal?: number;
   moduleId: string;
   submissionFields?: {
     label: string;
