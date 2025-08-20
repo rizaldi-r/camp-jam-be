@@ -15,6 +15,8 @@ import { SubmissionTemplatesModule } from './submission-templates/submission-tem
 import { SubmissionsModule } from './submissions/submissions.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { ModuleProgressModule } from './module-progress/module-progress.module';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -23,6 +25,14 @@ import { ModuleProgressModule } from './module-progress/module-progress.module';
       isGlobal: true,
       // TODO: add dynamic path
       envFilePath: `.env`,
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 50,
+        },
+      ],
     }),
     AuthModule,
     UserModule,
@@ -39,6 +49,13 @@ import { ModuleProgressModule } from './module-progress/module-progress.module';
     ModuleProgressModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      // Apply the ThrottlerGuard globally
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

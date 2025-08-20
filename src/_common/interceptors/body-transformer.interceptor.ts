@@ -9,6 +9,7 @@ import { map } from 'rxjs/operators';
 import { mapEntityToDto } from '../utils/mapper.util';
 import { UserResponseDto } from '../../user/dto/res/user-response-body.dto';
 import { CourseResponseDto } from 'src/courses/dto/res/courses-response.dto';
+import { EnrollmentResponseDto } from 'src/enrollments/dto/res/entollment-response.dto';
 
 @Injectable()
 export class BodyTransformerInterceptor implements NestInterceptor {
@@ -20,6 +21,8 @@ export class BodyTransformerInterceptor implements NestInterceptor {
       dtoClass = UserResponseDto;
     } else if (request.url.includes('/courses')) {
       dtoClass = CourseResponseDto;
+    } else if (request.url.includes('/enrollments')) {
+      dtoClass = EnrollmentResponseDto;
     }
 
     return next.handle().pipe(
