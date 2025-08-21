@@ -17,6 +17,9 @@ import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { ModuleProgressModule } from './module-progress/module-progress.module';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { SubdescriptionsModule } from './subdescriptions/subdescriptions.module';
+import { LinksModule } from './links/links.module';
+import { SubmissionFieldsModule } from './submission-fields/submission-fields.module';
 
 @Module({
   imports: [
@@ -47,6 +50,9 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     SubmissionsModule,
     EnrollmentsModule,
     ModuleProgressModule,
+    SubdescriptionsModule,
+    LinksModule,
+    SubmissionFieldsModule,
   ],
   controllers: [AppController],
   providers: [
