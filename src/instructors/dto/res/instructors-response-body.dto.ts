@@ -9,14 +9,14 @@ export class InstructorResponseDto {
   id: string;
 
   @Expose()
-  @Type(() => UserResponseDto)
-  user: UserResponseDto;
-
-  @Expose()
   @IsString()
   userTitle: string | null;
 
   @Expose()
   @IsEnum(Program)
   program: Program;
+
+  @Expose()
+  @Type(() => UserResponseDto)
+  user: UserResponseDto;
 }
