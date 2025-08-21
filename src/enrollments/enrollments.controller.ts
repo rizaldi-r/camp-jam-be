@@ -84,8 +84,11 @@ export class EnrollmentsController {
   @Get(':id')
   @OwnershipService(EnrollmentsService)
   @OwnershipIdSource(['student', 'instructor'], 'params', 'id')
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Enrollment> {
-    return this.enrollmentsService.getEnrollmentById(id);
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() query: FindAllEnrollmentQueryDto,
+  ): Promise<Enrollment> {
+    return this.enrollmentsService.getEnrollmentById(id, query);
   }
 
   @Patch(':id')

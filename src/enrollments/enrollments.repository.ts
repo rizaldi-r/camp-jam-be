@@ -93,24 +93,54 @@ export class EnrollmentsRepository implements EnrollmentRepositoryItf {
     });
   }
 
-  async findById(id: string): Promise<EnrollmentWithProgressIds | null> {
+  async findById(
+    id: string,
+    query?: FindAllCoursesQuery,
+  ): Promise<EnrollmentWithProgressIds | null> {
+    // return this.prism
+    const {
+      includeSubmissions,
+      includeAllProgress,
+      includeCourse,
+      includeSections,
+    } = query || {};
+
+    const include: Prisma.EnrollmentInclude = {
+      instructor: { include: { user: true } },
+      student: { include: { user: true } },
+      moduleProgress: true,
+      lectureProgress: includeAllProgress ? true : false,
+      assignmentProgress: includeAllProgress ? true : false,
+      assignmentScore: includeAllProgress ? true : false,
+      course: includeCourse
+        ? {
+            include: {
+              sections: includeSections
+                ? { include: { modules: true } }
+                : false,
+              categories: {
+                include: { category: true },
+              },
+            },
+          }
+        : false,
+      submissions: includeSubmissions
+        ? {
+            include: {
+              submissionTemplate: true,
+              submissionFieldValue: {
+                include: {
+                  submissionField: true,
+                },
+              },
+            },
+          }
+        : false,
+    };
+
     return this.prisma.enrollment.findUnique({
       where: { id },
-      include: {
-        moduleProgress: true,
-        lectureProgress: true,
-        assignmentProgress: true,
-        assignmentScore: true,
-        course: true,
-        submissions: {
-          include: {
-            submissionTemplate: true,
-            submissionFieldValue: {
-              include: { submissionField: true },
-            },
-          },
-        },
-      },
+      include,
     });
   }
 
@@ -122,6 +152,7 @@ export class EnrollmentsRepository implements EnrollmentRepositoryItf {
       includeSubmissions,
       includeAllProgress,
       includeCourse,
+      includeSections,
       courseId,
       courseCategoryId,
     } = query;
@@ -135,7 +166,9 @@ export class EnrollmentsRepository implements EnrollmentRepositoryItf {
       course: includeCourse
         ? {
             include: {
-              sections: { include: { modules: true } },
+              sections: includeSections
+                ? { include: { modules: true } }
+                : false,
               categories: {
                 include: { category: true },
               },
@@ -215,14 +248,16 @@ export class EnrollmentsRepository implements EnrollmentRepositoryItf {
         lectureProgress: true,
         assignmentProgress: true,
         assignmentScore: true,
-        // submissions: {
-        //   include: {
-        //     submissionTemplate: true,
-        //     submissionFieldValue: {
-        //       include: { submissionField: true },
-        //     },
-        //   },
-        // },
+        submissions: {
+          include: {
+            submissionTemplate: true,
+            submissionFieldValue: {
+              include: { submissionField: true },
+            },
+          },
+        },
+        instructor: { include: { user: true } },
+        student: { include: { user: true } },
       },
     });
   }

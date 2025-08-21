@@ -11,6 +11,7 @@ import {
 } from 'class-validator';
 import { CourseResponseDto } from 'src/courses/dto/res/courses-response.dto';
 import { InstructorResponseDto } from 'src/instructors/dto/res/instructors-response-body.dto';
+import { StudentResponseDto } from 'src/students/dto/res/student-response.dto';
 import { SubmissionResponseDto } from 'src/submissions/dto/res/submission-response.dto';
 
 export class ProgressResponseDto {
@@ -18,11 +19,13 @@ export class ProgressResponseDto {
   @IsUUID()
   id: string;
 
+  @Expose()
   @Type(() => Number)
   @IsNumber()
   @IsOptional()
   progressPercentage: number | null;
 
+  @Expose()
   @Type(() => Number)
   @IsNumber()
   moduleCompleted: number;
@@ -97,6 +100,11 @@ export class EnrollmentResponseDto {
   @Type(() => InstructorResponseDto)
   @ValidateNested()
   instructor: InstructorResponseDto;
+
+  @Expose()
+  @Type(() => StudentResponseDto)
+  @ValidateNested()
+  student: StudentResponseDto;
 
   @Expose()
   @Type(() => ProgressResponseDto)

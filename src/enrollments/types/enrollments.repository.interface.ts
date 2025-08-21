@@ -25,6 +25,7 @@ export interface FindAllCoursesQuery {
   includeSubmissions?: boolean;
   includeAllProgress?: boolean;
   includeCourse?: boolean;
+  includeSections?: boolean;
   courseId?: string;
   courseCategoryId?: string;
 }
@@ -37,7 +38,7 @@ export interface EnrollmentWithProgressIds extends Enrollment {
 
 export interface EnrollmentRepositoryItf {
   create(data: CreateEnrollmentData): Promise<Enrollment>;
-  findById(id: string): Promise<EnrollmentWithProgressIds | null>;
+  // findById(id: string): Promise<EnrollmentWithProgressIds | null>;
   findByStudentAndCourse(
     studentId: string,
     courseId: string,

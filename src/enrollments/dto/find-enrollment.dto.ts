@@ -18,6 +18,11 @@ export class FindAllEnrollmentQueryDto {
   includeCourse?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  includeSections?: boolean;
+
+  @IsOptional()
   @IsString()
   courseId?: string;
 

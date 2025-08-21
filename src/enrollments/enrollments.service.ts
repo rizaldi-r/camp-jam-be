@@ -135,8 +135,11 @@ export class EnrollmentsService {
     return enrollment;
   }
 
-  async getEnrollmentById(id: string): Promise<EnrollmentWithProgressIds> {
-    const enrollment = await this.enrollmentsRepository.findById(id);
+  async getEnrollmentById(
+    id: string,
+    query?: FindAllEnrollmentQueryDto,
+  ): Promise<EnrollmentWithProgressIds> {
+    const enrollment = await this.enrollmentsRepository.findById(id, query);
     if (!enrollment) {
       throw new ResourceNotFoundException('Enrollment', 'id', id);
     }
@@ -196,7 +199,6 @@ export class EnrollmentsService {
     const enrollment = await this.getEnrollmentById(submission.enrollmentId);
     const allAssignmentSubmissions =
       await this.submissionsService.getSubmissionsByEnrollmentId(enrollment.id);
-    console.log('🚀 ~ allAssignmentSubmissions:', allAssignmentSubmissions);
 
     // 4. Recalculate enrollment metrics based on all submissions.
     let totalScoreAchieved = new Prisma.Decimal(0);
