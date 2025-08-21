@@ -45,4 +45,8 @@ export class FindOneCourseDto {
   @IsOptional()
   @IsBooleanString()
   showCategories?: boolean;
+
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
 }

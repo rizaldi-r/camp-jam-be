@@ -43,6 +43,21 @@ export class CoursesService {
     return course;
   }
 
+  async findByInstructorId(instructorId: string, query?: FindOneCourseDto) {
+    const course = await this.coursesRepository.findByInstructorId(
+      instructorId,
+      query,
+    );
+    if (!course) {
+      throw new ResourceNotFoundException(
+        'Course',
+        'instructor Id',
+        instructorId,
+      );
+    }
+    return course;
+  }
+
   async update(id: string, updateDto: UpdateCourseDto) {
     await this.findById(id);
     if (updateDto.instructorId) {

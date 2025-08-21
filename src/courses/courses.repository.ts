@@ -89,7 +89,11 @@ export class CoursesRepository {
             user: true,
           },
         },
-        sections: { include: { modules: true } },
+        sections: {
+          take: 1,
+          orderBy: { createdAt: 'asc' },
+          include: { modules: { take: 1, orderBy: { createdAt: 'asc' } } },
+        },
         categories: {
           include: {
             category: true,
@@ -112,7 +116,11 @@ export class CoursesRepository {
     if (query?.showSections) {
       include.sections = {
         include: {
-          modules: true,
+          modules: {
+            orderBy: {
+              createdAt: 'asc',
+            },
+          },
         },
       };
     }
@@ -127,6 +135,53 @@ export class CoursesRepository {
 
     return this.prisma.course.findUnique({
       where: { id },
+      include: Object.keys(include).length > 0 ? include : undefined,
+    });
+  }
+
+  async findByInstructorId(
+    instructorId: string,
+    query?: IFindOneCourseQuery,
+  ): Promise<Course[] | null> {
+    const include: Prisma.CourseInclude = {};
+    const where: Prisma.CourseWhereInput = {
+      instructorId,
+    };
+
+    if (query?.categoryId) {
+      where.categories = {
+        some: {
+          categoryId: query.categoryId,
+        },
+      };
+    }
+
+    if (query?.showInstructor) {
+      include.instructor = { include: { user: true } };
+    }
+
+    if (query?.showSections) {
+      include.sections = {
+        include: {
+          modules: {
+            orderBy: {
+              createdAt: 'asc',
+            },
+          },
+        },
+      };
+    }
+
+    if (query?.showCategories) {
+      include.categories = {
+        include: {
+          category: true,
+        },
+      };
+    }
+
+    return this.prisma.course.findMany({
+      where,
       include: Object.keys(include).length > 0 ? include : undefined,
     });
   }

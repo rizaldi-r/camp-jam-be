@@ -43,4 +43,5 @@ export interface IFindOneCourseQuery {
   showInstructor?: boolean;
   showSections?: boolean;
   showCategories?: boolean;
+  categoryId?: string;
 }

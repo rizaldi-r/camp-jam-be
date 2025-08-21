@@ -57,6 +57,16 @@ export class CoursesController {
     return this.coursesService.findAll(query);
   }
 
+  @Get('by-instructor')
+  @Roles('INSTRUCTOR')
+  @HttpCode(HttpStatus.OK)
+  async findByInstructor(
+    @CurrentUser() user: UserType,
+    @Query() query: FindOneCourseDto,
+  ) {
+    return this.coursesService.findByInstructorId(user.instructor.id, query);
+  }
+
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findOne(
