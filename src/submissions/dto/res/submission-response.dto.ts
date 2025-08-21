@@ -10,6 +10,10 @@ import {
   IsNumber,
 } from 'class-validator';
 import { Type, Expose } from 'class-transformer';
+import {
+  SubmissionFieldDto,
+  SubmissionTemplateDto,
+} from 'src/modules/dto/res/module-response.dto';
 
 // export class SubmissionFieldDto {
 //   @Expose()
@@ -62,10 +66,10 @@ export class SubmissionFieldValueDto {
   @IsDateString()
   updatedAt: string;
 
-  // @Expose()
-  // @ValidateNested()
-  // @Type(() => SubmissionFieldDto)
-  // submissionField: SubmissionFieldDto;
+  @Expose()
+  @ValidateNested()
+  @Type(() => SubmissionFieldDto)
+  submissionField: SubmissionFieldDto;
 }
 
 export class SubmissionResponseDto {
@@ -127,6 +131,12 @@ export class SubmissionResponseDto {
   @Expose()
   @IsDateString()
   updatedAt: string;
+
+  @Expose()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SubmissionTemplateDto)
+  submissionTemplate: SubmissionTemplateDto[];
 
   @Expose()
   @IsArray()

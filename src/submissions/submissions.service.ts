@@ -61,13 +61,13 @@ export class SubmissionsService {
   }
 
   async getAllSubmissions(): Promise<Submission[]> {
-    return this.submissionsRepository.findAll();
+    return await this.submissionsRepository.findAll();
   }
 
   async getSubmissionsByEnrollmentId(
     enrollmentId: string,
   ): Promise<Submission[]> {
-    return this.submissionsRepository.findByEnrollmentId(enrollmentId);
+    return await this.submissionsRepository.findByEnrollmentId(enrollmentId);
   }
 
   async updateSubmission(

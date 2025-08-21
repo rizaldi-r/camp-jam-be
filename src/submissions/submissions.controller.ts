@@ -25,6 +25,7 @@ import {
   UpdateSubmissionDto,
 } from 'src/submissions/dto/update-submission.dto';
 import { ModulesService } from 'src/modules/modules.service';
+import { EnrollmentsService } from 'src/enrollments/enrollments.service';
 // import { CurrentUser } from 'src/_common/decorators/current-user.decorator';
 // import { UserType } from 'src/_common/types/user.type';
 // import { EnrollmentsService } from 'src/enrollments/enrollments.service';
@@ -61,6 +62,15 @@ export class SubmissionsController {
   @OwnershipIdSource(['student'], 'params', 'id')
   async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Submission> {
     return this.submissionsService.getSubmissionById(id);
+  }
+
+  @Get('by-enrollment/:enrollmentId')
+  @OwnershipService(EnrollmentsService)
+  @OwnershipIdSource(['student', 'instructor'], 'params', 'enrollmentId')
+  findByEnrollment(
+    @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,
+  ): Promise<Submission[]> {
+    return this.submissionsService.getSubmissionsByEnrollmentId(enrollmentId);
   }
 
   @Patch(':id')
