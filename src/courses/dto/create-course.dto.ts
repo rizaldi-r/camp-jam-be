@@ -46,6 +46,11 @@ export class CreateCourseDto {
   @IsBoolean()
   isLocked?: boolean;
 
+  @IsOptional()
+  @IsString()
+  @IsUUID()
+  instructorId: string;
+
   @IsNotEmpty()
   @IsArray()
   @IsEnum(Program, { each: true })

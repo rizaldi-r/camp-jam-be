@@ -42,13 +42,20 @@ export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
   @Post()
-  @Roles('ADMIN', 'INSTRUCTOR')
+  @Roles('INSTRUCTOR')
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createDto: CreateCourseDto,
     @CurrentUser() user: UserType,
   ) {
     return this.coursesService.create(createDto, user.instructor.id);
+  }
+
+  @Post('by-admin')
+  @Roles('ADMIN')
+  @HttpCode(HttpStatus.CREATED)
+  async createByAdmin(@Body() createDto: CreateCourseDto) {
+    return this.coursesService.create(createDto, createDto.instructorId);
   }
 
   @Get()
