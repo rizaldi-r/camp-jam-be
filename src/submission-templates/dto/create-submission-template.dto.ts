@@ -34,7 +34,7 @@ export class CreateSubmissionTemplateDto {
   @IsNumber()
   scoreTotal?: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })

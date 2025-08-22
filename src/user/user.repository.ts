@@ -16,8 +16,9 @@ export class UserRepository implements UserRepositoryItf {
     firstName?: string;
     lastName?: string;
     email?: string;
+    role?: UserRole;
   }): Promise<User[]> {
-    const { username, firstName, lastName, email } = filters || {};
+    const { username, firstName, lastName, email, role } = filters || {};
     return this.prisma.user.findMany({
       where: {
         AND: [
@@ -31,6 +32,7 @@ export class UserRepository implements UserRepositoryItf {
             ? { lastName: { contains: lastName, mode: 'insensitive' } }
             : {},
           email ? { email: { contains: email, mode: 'insensitive' } } : {},
+          role ? { role } : {},
         ],
       },
       include: {
