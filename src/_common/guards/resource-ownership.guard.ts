@@ -37,7 +37,7 @@ export class ResourceOwnershipGuard implements CanActivate {
     // Check if the endpoint allows admin bypass and if the user is an admin
     const allowAdminBypass = this.reflector.getAllAndOverride<boolean>(
       ALLOW_ADMIN_BYPASS_OWNERSHIP_KEY,
-      [context.getHandler()],
+      [context.getHandler(), context.getClass()],
     );
     // Get the resource ID source from the metadata
     const idSource = this.reflector.get<[string, keyof Request, string]>(
