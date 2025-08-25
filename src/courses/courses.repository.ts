@@ -37,18 +37,26 @@ export class CoursesRepository {
       categoryId,
       categoryName,
       instructorId,
-      instructorUsername,
+      instructorName,
+      sortBy,
+      sortOrder = 'desc',
     } = query;
-    const where: Prisma.CourseWhereInput = {};
 
+    const where: Prisma.CourseWhereInput = {};
+    const orderBy: Prisma.CourseOrderByWithRelationInput[] = [];
+
+    // Filter by course title (case-insensitive)
     if (title) {
       where.title = { contains: title, mode: 'insensitive' };
     }
 
+    // Filter by allowed program.
+    // The `hasSome` filter is used for an array of strings.
     if (program) {
       where.allowedPrograms = { hasSome: [program] };
     }
 
+    // Filter by category ID. If not provided, try filtering by category name.
     if (categoryId) {
       where.categories = {
         some: {
@@ -68,21 +76,51 @@ export class CoursesRepository {
       };
     }
 
+    // Filter by instructor ID. If not provided, try filtering by instructor username.
     if (instructorId) {
       where.instructorId = instructorId;
-    } else if (instructorUsername) {
+    } else if (instructorName) {
       where.instructor = {
         user: {
-          username: {
-            contains: instructorUsername,
-            mode: 'insensitive',
-          },
+          OR: [
+            {
+              firstName: {
+                contains: instructorName,
+                mode: 'insensitive',
+              },
+            },
+            {
+              lastName: {
+                contains: instructorName,
+                mode: 'insensitive',
+              },
+            },
+          ],
         },
       };
     }
 
+    // Apply sorting logic based on the 'sortBy' parameter.
+    switch (sortBy) {
+      case 'createdAt':
+        orderBy.push({ createdAt: sortOrder });
+        break;
+      case 'updatedAt':
+        orderBy.push({ updatedAt: sortOrder });
+        break;
+      case 'title':
+        orderBy.push({ title: sortOrder });
+        break;
+      default:
+        // Default sort by createdAt if no sortBy is specified.
+        orderBy.push({ createdAt: 'desc' });
+        break;
+    }
+
+    // Return the results with nested data and sorting applied.
     return this.prisma.course.findMany({
       where,
+      orderBy,
       include: {
         instructor: {
           include: {

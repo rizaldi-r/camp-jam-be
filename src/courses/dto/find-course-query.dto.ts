@@ -7,6 +7,17 @@ import {
   IsUUID,
 } from 'class-validator';
 
+export enum SortBy {
+  CREATED_AT = 'createdAt',
+  UPDATED_AT = 'updatedAt',
+  TITLE = 'title',
+}
+
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
 export class FindAllCoursesQueryDto {
   @IsOptional()
   @IsString()
@@ -30,7 +41,15 @@ export class FindAllCoursesQueryDto {
 
   @IsOptional()
   @IsString()
-  instructorUsername?: string;
+  instructorName?: string;
+
+  @IsOptional()
+  @IsEnum(SortBy)
+  sortBy?: SortBy;
+
+  @IsOptional()
+  @IsEnum(SortOrder)
+  sortOrder?: SortOrder;
 }
 
 export class FindOneCourseDto {

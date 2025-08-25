@@ -36,7 +36,9 @@ export interface IFindAllCoursesQuery {
   categoryId?: string;
   categoryName?: string;
   instructorId?: string;
-  instructorUsername?: string;
+  instructorName?: string;
+  sortBy?: 'createdAt' | 'updatedAt' | 'title';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface IFindOneCourseQuery {
