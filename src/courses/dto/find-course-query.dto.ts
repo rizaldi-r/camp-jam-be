@@ -44,6 +44,22 @@ export class FindAllCoursesQueryDto {
   instructorName?: string;
 
   @IsOptional()
+  @IsString()
+  instructorUsername?: string;
+
+  @IsOptional()
+  @IsUUID()
+  studentId?: string;
+
+  @IsOptional()
+  @IsString()
+  studentName?: string;
+
+  @IsOptional()
+  @IsString()
+  studentUsername?: string;
+
+  @IsOptional()
   @IsEnum(SortBy)
   sortBy?: SortBy;
 

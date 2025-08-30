@@ -12,6 +12,270 @@ import {
 export class CoursesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Builds the WHERE clause for filtering courses
+   */
+  private buildWhereClause(
+    query: IFindAllCoursesQuery,
+  ): Prisma.CourseWhereInput {
+    const {
+      title,
+      program,
+      categoryId,
+      categoryName,
+      instructorId,
+      instructorName,
+      instructorUsername,
+      studentId,
+      studentName,
+      studentUsername,
+    } = query;
+
+    const where: Prisma.CourseWhereInput = {};
+
+    // Filter by course title (case-insensitive)
+    if (title) {
+      where.title = {
+        contains: title,
+        mode: 'insensitive',
+      };
+    }
+
+    // Filter by allowed program (array contains filter)
+    if (program) {
+      where.allowedPrograms = {
+        hasSome: [program],
+      };
+    }
+
+    // Category filters (prioritize ID over name)
+    this.applyCategoryFilter(where, categoryId, categoryName);
+
+    // Instructor filters (prioritize ID over name/username)
+    this.applyInstructorFilter(
+      where,
+      instructorId,
+      instructorName,
+      instructorUsername,
+    );
+
+    // Student filters (prioritize ID over username over name)
+    this.applyStudentFilter(where, studentId, studentName, studentUsername);
+
+    return where;
+  }
+
+  /**
+   * Applies category filtering logic
+   */
+  private applyCategoryFilter(
+    where: Prisma.CourseWhereInput,
+    categoryId?: string,
+    categoryName?: string,
+  ): void {
+    if (categoryId) {
+      where.categories = {
+        some: {
+          categoryId,
+        },
+      };
+    } else if (categoryName) {
+      where.categories = {
+        some: {
+          category: {
+            name: {
+              contains: categoryName,
+              mode: 'insensitive',
+            },
+          },
+        },
+      };
+    }
+  }
+
+  /**
+   * Applies instructor filtering logic with priority: ID > Username > Name
+   */
+  private applyInstructorFilter(
+    where: Prisma.CourseWhereInput,
+    instructorId?: string,
+    instructorName?: string,
+    instructorUsername?: string,
+  ): void {
+    if (instructorId) {
+      // Priority 1: Filter by instructor ID
+      where.instructorId = instructorId;
+    } else if (instructorUsername) {
+      // Priority 2: Filter by instructor username
+      where.instructor = {
+        user: {
+          username: {
+            contains: instructorUsername,
+            mode: 'insensitive',
+          },
+        },
+      };
+    } else if (instructorName) {
+      // Priority 3: Filter by instructor name (first or last name)
+      where.instructor = {
+        user: {
+          OR: [
+            {
+              firstName: {
+                contains: instructorName,
+                mode: 'insensitive',
+              },
+            },
+            {
+              lastName: {
+                contains: instructorName,
+                mode: 'insensitive',
+              },
+            },
+            {
+              AND: instructorName.split(' ').map((term) => ({
+                OR: [
+                  {
+                    firstName: {
+                      contains: term.trim(),
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    lastName: {
+                      contains: term.trim(),
+                      mode: 'insensitive',
+                    },
+                  },
+                ],
+              })),
+            },
+          ],
+        },
+      };
+    }
+  }
+
+  /**
+   * Applies student filtering logic with priority: ID > Username > Name
+   */
+  private applyStudentFilter(
+    where: Prisma.CourseWhereInput,
+    studentId?: string,
+    studentName?: string,
+    studentUsername?: string,
+  ): void {
+    if (studentId) {
+      // Priority 1: Filter by student ID
+      where.enrollments = {
+        some: {
+          studentId,
+        },
+      };
+    } else if (studentUsername) {
+      // Priority 2: Filter by student username
+      where.enrollments = {
+        some: {
+          student: {
+            user: {
+              username: {
+                contains: studentUsername,
+                mode: 'insensitive',
+              },
+            },
+          },
+        },
+      };
+    } else if (studentName) {
+      // Priority 3: Filter by student name (first or last name)
+      where.enrollments = {
+        some: {
+          student: {
+            user: {
+              OR: [
+                {
+                  firstName: {
+                    contains: studentName,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  lastName: {
+                    contains: studentName,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  AND: studentName.split(' ').map((term) => ({
+                    OR: [
+                      {
+                        firstName: {
+                          contains: term.trim(),
+                          mode: 'insensitive',
+                        },
+                      },
+                      {
+                        lastName: {
+                          contains: term.trim(),
+                          mode: 'insensitive',
+                        },
+                      },
+                    ],
+                  })),
+                },
+              ],
+            },
+          },
+        },
+      };
+    }
+  }
+
+  /**
+   * Builds the ORDER BY clause for sorting courses
+   */
+  private buildOrderByClause(
+    sortBy?: string,
+    sortOrder: 'asc' | 'desc' = 'desc',
+  ): Prisma.CourseOrderByWithRelationInput[] {
+    const orderBy: Prisma.CourseOrderByWithRelationInput[] = [];
+
+    switch (sortBy) {
+      case 'createdAt':
+        orderBy.push({ createdAt: sortOrder });
+        break;
+      case 'updatedAt':
+        orderBy.push({ updatedAt: sortOrder });
+        break;
+      case 'title':
+        orderBy.push({ title: sortOrder });
+        break;
+      case 'instructor':
+        // Sort by instructor's first name, then last name
+        orderBy.push({
+          instructor: {
+            user: {
+              firstName: sortOrder,
+            },
+          },
+        });
+        orderBy.push({
+          instructor: {
+            user: {
+              lastName: sortOrder,
+            },
+          },
+        });
+        break;
+      default:
+        // Default sort by creation date (newest first)
+        orderBy.push({ createdAt: 'desc' });
+        break;
+    }
+
+    return orderBy;
+  }
+
   async create(
     data: Omit<ICreateCourse, 'categoryIds'>,
     categoryIds: string[],
@@ -31,93 +295,9 @@ export class CoursesRepository {
   }
 
   async findAll(query: IFindAllCoursesQuery): Promise<Course[]> {
-    const {
-      title,
-      program,
-      categoryId,
-      categoryName,
-      instructorId,
-      instructorName,
-      sortBy,
-      sortOrder = 'desc',
-    } = query;
+    const where = this.buildWhereClause(query);
+    const orderBy = this.buildOrderByClause(query.sortBy, query.sortOrder);
 
-    const where: Prisma.CourseWhereInput = {};
-    const orderBy: Prisma.CourseOrderByWithRelationInput[] = [];
-
-    // Filter by course title (case-insensitive)
-    if (title) {
-      where.title = { contains: title, mode: 'insensitive' };
-    }
-
-    // Filter by allowed program.
-    // The `hasSome` filter is used for an array of strings.
-    if (program) {
-      where.allowedPrograms = { hasSome: [program] };
-    }
-
-    // Filter by category ID. If not provided, try filtering by category name.
-    if (categoryId) {
-      where.categories = {
-        some: {
-          categoryId,
-        },
-      };
-    } else if (categoryName) {
-      where.categories = {
-        some: {
-          category: {
-            name: {
-              contains: categoryName,
-              mode: 'insensitive',
-            },
-          },
-        },
-      };
-    }
-
-    // Filter by instructor ID. If not provided, try filtering by instructor username.
-    if (instructorId) {
-      where.instructorId = instructorId;
-    } else if (instructorName) {
-      where.instructor = {
-        user: {
-          OR: [
-            {
-              firstName: {
-                contains: instructorName,
-                mode: 'insensitive',
-              },
-            },
-            {
-              lastName: {
-                contains: instructorName,
-                mode: 'insensitive',
-              },
-            },
-          ],
-        },
-      };
-    }
-
-    // Apply sorting logic based on the 'sortBy' parameter.
-    switch (sortBy) {
-      case 'createdAt':
-        orderBy.push({ createdAt: sortOrder });
-        break;
-      case 'updatedAt':
-        orderBy.push({ updatedAt: sortOrder });
-        break;
-      case 'title':
-        orderBy.push({ title: sortOrder });
-        break;
-      default:
-        // Default sort by createdAt if no sortBy is specified.
-        orderBy.push({ createdAt: 'desc' });
-        break;
-    }
-
-    // Return the results with nested data and sorting applied.
     return this.prisma.course.findMany({
       where,
       orderBy,
@@ -130,7 +310,12 @@ export class CoursesRepository {
         sections: {
           take: 1,
           orderBy: { createdAt: 'asc' },
-          include: { modules: { take: 1, orderBy: { createdAt: 'asc' } } },
+          include: {
+            modules: {
+              take: 1,
+              orderBy: { createdAt: 'asc' },
+            },
+          },
         },
         categories: {
           include: {

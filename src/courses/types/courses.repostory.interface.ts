@@ -37,6 +37,10 @@ export interface IFindAllCoursesQuery {
   categoryName?: string;
   instructorId?: string;
   instructorName?: string;
+  instructorUsername?: string;
+  studentId?: string;
+  studentName?: string;
+  studentUsername?: string;
   sortBy?: 'createdAt' | 'updatedAt' | 'title';
   sortOrder?: 'asc' | 'desc';
 }
