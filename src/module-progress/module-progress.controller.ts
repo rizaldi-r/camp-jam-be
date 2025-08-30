@@ -19,6 +19,7 @@ import {
   OwnershipIdSource,
   OwnershipService,
 } from 'src/_common/decorators/ownership.decorator';
+import { EnrollmentsService } from 'src/enrollments/enrollments.service';
 
 @Controller('module-progress')
 @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnershipGuard)
@@ -33,7 +34,7 @@ export class ModuleProgressController {
   }
 
   @Get('by-enrollment/:enrollmentId')
-  @OwnershipService(ModuleProgressService)
+  @OwnershipService(EnrollmentsService)
   @OwnershipIdSource(['student'], 'params', 'enrollmentId')
   findByEnrollmentId(
     @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,

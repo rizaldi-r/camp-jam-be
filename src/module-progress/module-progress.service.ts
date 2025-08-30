@@ -86,6 +86,7 @@ export class ModuleProgressService {
       // Retrieve the associated enrollment and module for progress updates
       const enrollment = await this.enrollmentsService.getEnrollmentById(
         existingProgress.enrollmentId,
+        { includeAllProgress: true },
       );
 
       const module = await this.modulesService.findById(
