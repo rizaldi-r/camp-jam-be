@@ -150,10 +150,30 @@ export class EnrollmentsService {
     studentId: string,
     query: FindAllEnrollmentQueryDto,
   ): Promise<Enrollment[]> {
+    const { searchQuery, searchBy, sortBy, sortOrder, ...restData } = query;
+    const mappedQuery = {
+      ...restData,
+      ...(searchQuery &&
+        searchBy && {
+          search: {
+            searchQuery,
+            searchBy: searchBy,
+          },
+        }),
+      ...(sortBy &&
+        sortOrder && {
+          sort: {
+            sortBy: sortBy,
+            sortOrder: sortOrder,
+          },
+        }),
+    };
+
     const enrollments = await this.enrollmentsRepository.findByStudentId(
       studentId,
-      query,
+      mappedQuery,
     );
+
     return enrollments;
   }
 

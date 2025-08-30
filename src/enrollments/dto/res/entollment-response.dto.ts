@@ -11,6 +11,7 @@ import {
 } from 'class-validator';
 import { CourseResponseDto } from 'src/courses/dto/res/courses-response.dto';
 import { InstructorResponseDto } from 'src/instructors/dto/res/instructors-response-body.dto';
+import { ModuleProgressDto } from 'src/module-progress/dto/res/module-progress-response.dto';
 import { StudentResponseDto } from 'src/students/dto/res/student-response.dto';
 import { SubmissionResponseDto } from 'src/submissions/dto/res/submission-response.dto';
 
@@ -125,6 +126,11 @@ export class EnrollmentResponseDto {
   @Type(() => ProgressResponseDto)
   @ValidateNested()
   assignmentScore: ProgressResponseDto;
+
+  @Expose()
+  @Type(() => ModuleProgressDto)
+  @ValidateNested()
+  moduleProgresses: ModuleProgressDto;
 
   @Expose()
   @Type(() => CourseResponseDto)

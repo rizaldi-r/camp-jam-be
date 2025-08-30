@@ -69,8 +69,6 @@ export class EnrollmentsController {
 
   @Get('by-student')
   @Roles('STUDENT')
-  // @OwnershipService(EnrollmentsService)
-  // @OwnershipIdSource(['student'], 'params', 'studentId')
   getEnrollmentsByStudentId(
     @CurrentUser() user: UserType,
     @Query() query: FindAllEnrollmentQueryDto,

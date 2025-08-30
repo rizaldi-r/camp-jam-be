@@ -6,6 +6,10 @@ import {
   EnrollmentRepositoryItf,
   EnrollmentWithProgressIds,
   FindAllCoursesQuery,
+  SearchBy,
+  SearchData,
+  SortBy,
+  SortOption,
   UpdateEnrollmentData,
   UpdateEnrollmentDataData,
 } from 'src/enrollments/types/enrollments.repository.interface';
@@ -13,6 +17,102 @@ import {
 @Injectable()
 export class EnrollmentsRepository implements EnrollmentRepositoryItf {
   constructor(private readonly prisma: PrismaService) {}
+
+  private buildSearchCondition(
+    search: SearchData,
+  ): Prisma.EnrollmentWhereInput {
+    const { searchQuery, searchBy } = search;
+
+    if (!searchQuery.trim()) return {};
+
+    switch (searchBy) {
+      case SearchBy.TITLE:
+        return {
+          course: {
+            title: {
+              contains: searchQuery,
+              mode: 'insensitive',
+            },
+          },
+        };
+
+      case SearchBy.INSTRUCTOR_NAME:
+        return {
+          instructor: {
+            user: {
+              OR: [
+                {
+                  firstName: {
+                    contains: searchQuery,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  lastName: {
+                    contains: searchQuery,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  // Search full name (concatenated)
+                  AND: [
+                    {
+                      OR: searchQuery.split(' ').map((term) => ({
+                        OR: [
+                          {
+                            firstName: {
+                              contains: term,
+                              mode: 'insensitive',
+                            },
+                          },
+                          {
+                            lastName: {
+                              contains: term,
+                              mode: 'insensitive',
+                            },
+                          },
+                        ],
+                      })),
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        };
+
+      default:
+        return {};
+    }
+  }
+
+  private buildOrderByClause(
+    sort?: SortOption,
+  ): Prisma.EnrollmentOrderByWithRelationInput[] {
+    if (!sort) {
+      // Default sorting by enrollment date (newest first)
+      return [{ createdAt: 'desc' }];
+    }
+
+    const { sortBy, sortOrder } = sort;
+
+    switch (sortBy) {
+      case SortBy.TITLE:
+        return [
+          {
+            course: {
+              title: sortOrder,
+            },
+          },
+        ];
+
+      case SortBy.CREATED_AT:
+        return [{ createdAt: sortOrder }];
+
+      default:
+        return [{ createdAt: 'desc' }];
+    }
+  }
 
   async getStudentOwnerId(id: string): Promise<string | null> {
     const enrollment = await this.prisma.enrollment.findUnique({
@@ -153,8 +253,11 @@ export class EnrollmentsRepository implements EnrollmentRepositoryItf {
       includeAllProgress,
       includeCourse,
       includeSections,
+      includeModuleProgresses,
       courseId,
       courseCategoryId,
+      search,
+      sort,
     } = query;
 
     const include: Prisma.EnrollmentInclude = {
@@ -163,6 +266,7 @@ export class EnrollmentsRepository implements EnrollmentRepositoryItf {
       lectureProgress: includeAllProgress ? true : false,
       assignmentProgress: includeAllProgress ? true : false,
       assignmentScore: includeAllProgress ? true : false,
+      moduleProgresses: includeModuleProgresses ? true : false,
       course: includeCourse
         ? {
             include: {
@@ -191,6 +295,7 @@ export class EnrollmentsRepository implements EnrollmentRepositoryItf {
 
     const where: Prisma.EnrollmentWhereInput = {
       studentId,
+      ...(courseId && { courseId }),
       ...(courseCategoryId && {
         course: {
           categories: {
@@ -200,16 +305,17 @@ export class EnrollmentsRepository implements EnrollmentRepositoryItf {
           },
         },
       }),
-      ...(courseId && {
-        course: {
-          id: courseId,
-        },
-      }),
+      // Add search functionality
+      ...(search && this.buildSearchCondition(search)),
     };
+
+    // Build orderBy clause
+    const orderBy = this.buildOrderByClause(sort);
 
     return this.prisma.enrollment.findMany({
       where,
       include,
+      orderBy,
     });
   }
 

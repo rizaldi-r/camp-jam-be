@@ -5,6 +5,36 @@ import {
   Prisma,
 } from '@prisma/client';
 
+export enum SortBy {
+  CREATED_AT = 'createdAt',
+  UPDATED_AT = 'updatedAt',
+  TITLE = 'title',
+}
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
+export enum SearchBy {
+  TITLE = 'title',
+  INSTRUCTOR_NAME = 'instructorName',
+}
+
+export interface SortOption {
+  sortBy: SortBy;
+  sortOrder: SortOrder;
+}
+
+export interface SearchData {
+  searchQuery: string;
+  searchBy: SearchBy;
+}
+
+export interface SortOption {
+  sortBy: SortBy;
+  sortOrder: SortOrder;
+}
+
 export interface CreateEnrollmentData {
   studentId: string;
   instructorId: string;
@@ -26,8 +56,11 @@ export interface FindAllCoursesQuery {
   includeAllProgress?: boolean;
   includeCourse?: boolean;
   includeSections?: boolean;
+  includeModuleProgresses?: boolean;
   courseId?: string;
   courseCategoryId?: string;
+  search?: SearchData;
+  sort?: SortOption;
 }
 
 export interface EnrollmentWithProgressIds extends Enrollment {
