@@ -1,0 +1,41 @@
+import { Enrollment, Prisma } from '@prisma/client';
+import { CoursesService } from 'src/courses/courses.service';
+import { FindAllEnrollmentQueryDto } from 'src/enrollments/dto/find-enrollment.dto';
+import { UpdateEnrollmentDto } from 'src/enrollments/dto/update-enrollment.dto';
+import { EnrollmentsRepository } from 'src/enrollments/enrollments.repository';
+import { EnrollmentWithProgressIds } from 'src/enrollments/types/enrollments.repository.interface';
+import { ModuleProgressService } from 'src/module-progress/module-progress.service';
+import { ModulesService } from 'src/modules/modules.service';
+import { SubmissionTemplatesService } from 'src/submission-templates/submission-templates.service';
+import { SubmissionsService } from 'src/submissions/submissions.service';
+export declare class EnrollmentsService {
+    private readonly enrollmentsRepository;
+    private readonly coursesService;
+    private readonly submissionTemplatesService;
+    private readonly moduleProgressService;
+    private readonly submissionsService;
+    private readonly modulesService;
+    constructor(enrollmentsRepository: EnrollmentsRepository, coursesService: CoursesService, submissionTemplatesService: SubmissionTemplatesService, moduleProgressService: ModuleProgressService, submissionsService: SubmissionsService, modulesService: ModulesService);
+    isStudentOwner(enrollmentId: string, studentId: string): Promise<boolean>;
+    isInstructorOwner(enrollmentId: string, instructorId: string): Promise<boolean>;
+    createEnrollment(studentId: string, courseId: string): Promise<Enrollment>;
+    getEnrollmentById(id: string, query?: FindAllEnrollmentQueryDto): Promise<EnrollmentWithProgressIds>;
+    getEnrollmentsByStudentId(studentId: string, query: FindAllEnrollmentQueryDto): Promise<Enrollment[]>;
+    getAllEnrollments(): Promise<Enrollment[]>;
+    getEnrollmentsByCourseId(courseId: string): Promise<Enrollment[]>;
+    getEnrollmentDataAssignmentByEnrollmentId(enrollmentId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        progressPercentage: Prisma.Decimal | null;
+        moduleCompleted: Prisma.Decimal | null;
+        moduleTotal: number | null;
+        moduleProgressId: string | null;
+        lectureProgressId: string | null;
+        assignmentProgressId: string | null;
+        assignmentScoreId: string | null;
+    }>;
+    updateEnrollment(id: string, data: UpdateEnrollmentDto): Promise<Enrollment>;
+    updateEnrollmentProgressAfterGrading(submissionId: string): Promise<void>;
+    deleteEnrollment(id: string): Promise<Enrollment>;
+}

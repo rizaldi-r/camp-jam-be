@@ -18,7 +18,16 @@ async function bootstrap() {
   // global error catching
   app.useGlobalFilters(new ExceptionsFilter());
 
-  app.enableCors();
+  // Enable CORS
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'https://campjam.vercel.app',
+      'https://final-project-fe-rizaldi-r.vercel.app',
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   await app.listen(process.env.PORT ?? 3001);
 }
