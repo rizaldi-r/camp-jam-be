@@ -6,9 +6,10 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "prisma generate && nest build",
+    "build": "npx prisma generate && nest build",
+    "vercel-build": "echo 'Node version:' && node --version && echo 'Checking Prisma...' && npx prisma --version && echo 'Generating Prisma...' && npx prisma generate --schema=./prisma/schema.prisma && echo 'Checking generated files...' && ls -la node_modules/.prisma/client/ && echo 'Building NestJS...' && nest build",
     "start": "node dist/src/main.js",
-    "postinstall": "prisma generate",
+    "postinstall": "npx prisma generate",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "seed": "npx ts-node prisma/seed.ts",
     "migrate": "npx prisma migrate dev",
