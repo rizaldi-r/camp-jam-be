@@ -5,12 +5,6 @@
       "includeFiles": "node_modules/.prisma/**"
     }
   },
-  "builds": [
-    {
-      "src": "dist/src/main.js",
-      "use": "@vercel/node"
-    }
-  ],
   "routes": [
     {
       "src": "/(.*)",
