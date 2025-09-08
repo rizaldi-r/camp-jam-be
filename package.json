@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "npx prisma generate && nest build",
-    "vercel-build": "echo 'Node version:' && node --version && echo 'Checking Prisma...' && npx prisma --version && echo 'Generating Prisma...' && npx prisma generate --schema=./prisma/schema.prisma && echo 'Checking generated files...' && ls -la node_modules/.prisma/client/ && echo 'Building NestJS...' && nest build",
+    "vercel-build": "npx prisma generate && node -e \"try { const { Prisma } = require('@prisma/client'); console.log('✓ Prisma.Decimal:', typeof Prisma.Decimal); } catch(e) { console.error('✗ Error:', e.message); }\" && nest build",
     "start": "node dist/src/main.js",
     "postinstall": "npx prisma generate",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
